@@ -390,7 +390,13 @@ handlers.getPvpPlayers = function(args) {
 
 			var heroes = [];
 
-			if ( isObject(progress) && ("creatures" in progress) && ("heroes" in progress.creatures) ) {
+			if (isObject(progress) && !("creatures" in progress)) {
+				heroes = progress;
+			}
+			else if (isObject(progress) && ("creatures" in progress) && !("heroes" in progress.creatures)) {
+				heroes = progress.creatures;
+			}
+			else if ( isObject(progress) && ("creatures" in progress) && ("heroes" in progress.creatures) ) {
 				heroes = progress.creatures.heroes;
 			}
 

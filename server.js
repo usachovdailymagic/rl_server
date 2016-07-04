@@ -1,6 +1,6 @@
 var CONST_CODE_LOADPROGRESS_NOT_FOUND_USERDATA 	= 1001;
 var CONST_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 	= 2001;
-
+//testcomment for new revision
 // -----------------------------------------------------------------
 function isObject(val) {
     return val instanceof Object; 

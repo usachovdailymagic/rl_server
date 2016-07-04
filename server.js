@@ -298,3 +298,108 @@ handlers.redeemPromoCode = function(args) {
     }
         });*/
 };
+
+
+handlers.getPlayerStats = function(args) {
+	var leaderboard =  server.GetLeaderboardAroundUser({
+		StatisticName: "PvP Raiting",
+		PlayFabId: currentPlayerId,
+		MaxResultsCount: 3
+	});
+
+	var rank = 0;
+	var rate = 1;
+
+	if ( isObject( leaderboard ) && ( "Leaderboard" in leaderboard ) )
+	{
+		for (var i = 0; i < leaderboard.Leaderboard.length; i++) {
+			var player = leaderboard.Leaderboard[i];
+			if (player.PlayFabId == currentPlayerId) {
+				rank = player.Position + 1;
+				rate = player.StatValue;
+				break;
+			}
+		}
+	}
+
+	return { "playerRank": rank, "playerRate": rate };
+}
+
+handlers.updatePlayerStats = function(args) {
+	var rate = args.player.rate;
+	server.UpdatePlayerStatistics({
+		PlayFabId: currentPlayerId,
+		Statistics: [{
+			"StatisticName": "PvP Raiting",
+			"Value": rate
+		}]
+	});
+
+	var leaderboard =  server.GetLeaderboardAroundUser({
+		StatisticName: "PvP Raiting",
+		PlayFabId: currentPlayerId,
+		MaxResultsCount: 3
+	});
+
+	var rank = 0;
+
+	if ( isObject( leaderboard ) && ( "Leaderboard" in leaderboard ) )
+	{
+		for (var i = 0; i < leaderboard.Leaderboard.length; i++) {
+			var player = leaderboard.Leaderboard[i];
+			if (player.PlayFabId == currentPlayerId) {
+				rank = player.Position + 1;
+				break;
+			}
+		}
+	}
+
+	return { "playerRank": rank };
+}
+
+handlers.getPvpPlayers = function(args) {
+	var leaderboard =  server.GetLeaderboardAroundUser({
+		StatisticName: "PvP Raiting",
+		PlayFabId: currentPlayerId,
+		MaxResultsCount: 4
+	});
+
+
+	var players = [];
+
+	if ( isObject( leaderboard ) && ( "Leaderboard" in leaderboard ) )
+	{
+		for (var i = 0; i < leaderboard.Leaderboard.length; i++) {
+			var player = leaderboard.Leaderboard[i];
+			if (player.PlayFabId == currentPlayerId) {
+				continue;
+			}
+
+			var currentProgress = server.GetUserData({
+			    PlayFabId: player.PlayFabId,
+				Keys: ["Progress"]
+			});
+
+			var data = currentProgress.Data["Progress"];
+
+			var progress = {};
+			
+			if( "Value" in data ) {
+				progress = JSON.parse(data.Value);
+			}
+
+			var heroes = [];
+
+			if ( isObject(progress) && ("creatures" in progress) && ("heroes" in progress.creatures) ) {
+				heroes = progress.creatures.heroes;
+			}
+
+			var playerRank = player["Position"] + 1;
+
+			var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes };
+			players.push(pl);
+		}
+	}
+
+	return { result: { "players": players } };
+}

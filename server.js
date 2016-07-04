@@ -1,0 +1,300 @@
+var CONST_CODE_LOADPROGRESS_NOT_FOUND_USERDATA 	= 1001;
+var CONST_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 	= 2001;
+
+// -----------------------------------------------------------------
+function isObject(val) {
+    return val instanceof Object; 
+}
+//------------------------------------------------------------------ 
+function isArray(val) {
+    return val instanceof Array; 
+}
+
+handlers.getServerTime = function(args) {
+	var now = new Date();
+	var time = now.getTime();
+    return { serverTime: time };
+}
+ 
+//get friends progress
+//input: userID
+handlers.getFriendsProgress = function(args) {
+
+	var ids = server.GetPlayFabIDsFromFacebookIDs({
+		FacebookIDs: args.ids
+	});
+
+	var result = {};
+	for (var i = 0; i < ids.length; i++) {
+		var data = server.GetUserData({
+			PlayFabId: ids[i],
+			Keys: ["Scores"]
+		});
+		result[ids[i]] = data.Data[Scores];
+	};
+
+	var json = JSON.stringify(result);
+
+	return { result : json };
+};
+
+//get custom id. Which means our uuid of app on the device
+//input: isFbAcc - means from what auth scheme asking for a Uuid. Needed in client, just resendind it back for now.
+handlers.getCustomId = function(args) {
+
+	var result = {"isFbAcc":false};
+	var data = server.GetUserData({
+		PlayFabId: currentPlayerId,
+			Keys: ["Uuid"]
+	});
+	
+	if ( isObject(args) && ( "isFbAcc" in args ) )
+	{
+		result.isFbAcc = args.isFbAcc;
+	}
+	
+	if ( isObject( data ) && ( "Data" in data ) && ( "Uuid" in data.Data ) && ( "Value" in data.Data.Uuid ) )
+	{
+		result.Uuid = data.Data.Uuid.Value;
+	}
+	else
+	{
+		result = {"message":"Uuid not found","code":CONST_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID};	
+	}	
+
+	return result;
+};
+ 
+//reset user progress
+//input: none
+handlers.resetProgress = function(args) {
+
+	server.UpdateUserData({
+		PlayFabId: currentPlayerId,
+		Data: { 
+			"Progress": null,
+			"Scores": null
+		}
+	});
+};
+ 
+//save my progress, new version
+//input: key for saved game and save data
+handlers.saveMyProgress = function(args) {
+    var gameData = args.gamedata;
+
+    var userData = server.GetUserData({
+    	PlayFabId: currentPlayerId,
+        Keys: ["Progress"]
+    });
+    
+    var SaveGame = [];
+    
+    if( "Progress" in userData.Data )
+    {
+    	if( "Value" in userData.Data.Progress )
+    	{
+    		SaveGame = JSON.parse(userData.Data.Progress.Value);
+    	}
+    }
+    
+    var myJSONArray = [ {info:{}}, {map:{}}, {vault:{}}, {creatures:{}}, {shop:{}}, {quests_tasks:{}}, {scores:{}}, {gameflagsparams:{}}, {battleinfo:{}}, {task_timers:{}}, {tutorial:{}}, {chest_shop:{}}];
+    var missedArray = [];
+     
+    if (myJSONArray.length!=SaveGame.length) {
+        for(var i = 0; i < myJSONArray.length; i++) { 
+            var obj = myJSONArray[i];
+            for (var property in obj) {
+                var found = false;
+                 
+                for (var j = 0; j<SaveGame.length; j++) {
+                    var obj3 = SaveGame[j];
+                     
+                    for (var propertyinSaveGame in obj3) {
+                        if (property==propertyinSaveGame) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found)
+                        break;
+                }
+                if (!found) {
+                    missedArray.push(myJSONArray[i]);
+                }
+            }
+        }
+         
+        for(var i = 0; i < missedArray.length; i++) {
+            SaveGame.push(missedArray[i]);
+        }
+    }
+    
+    var uuid_to_save = "";
+    var SaveOverview = null;
+    var ScoreData = null;
+    
+    for (var i = 0; i < gameData.length; i++) {
+        var obj = gameData[i];
+        for (var property in obj)
+        {
+            if ( property == "scores" )
+            {
+            	var scoreData = obj["scores"].levelsScores;
+            	ScoreData = JSON.stringify(scoreData);
+            }
+            else if ( property == "saveoverview" )
+            {
+            	SaveOverview = JSON.stringify(obj["saveoverview"]);
+            }
+            else if ( property == "info" && isObject(obj[property]) && ( "uuid" in obj[property] ) ) // searching uuid to save
+            {
+            	uuid_to_save = obj[property]["uuid"];
+            }
+            for (var j = 0; j < SaveGame.length; j++)
+            {
+                var obj2 = SaveGame[j];
+                for (var propertySaveGame in obj2)
+                {
+                    var lfound = false;
+                     
+                    if (property==propertySaveGame)
+                    {
+                        SaveGame[j] = gameData[i];
+                        lfound = true;
+                        break;
+                    }
+                    if (lfound)
+                        break;
+                }
+            }
+        }
+    }
+
+    var json = JSON.stringify(SaveGame);
+    
+    var SaveObject = {"Progress":json, "Uuid":uuid_to_save};
+    
+    if ( ScoreData != null )
+    {
+    	SaveObject.Score = ScoreData;
+    }
+    if ( SaveOverview != null )
+    {
+    	SaveObject.SaveOverview = SaveOverview;
+    }
+
+    server.UpdateUserData({
+		PlayFabId: currentPlayerId,
+		Data: SaveObject
+	});
+};
+ 
+//input: none
+handlers.getShop = function(args) {
+
+    var shopData = server.GetTitleData({
+    	Keys: ["shop"]
+    });
+
+    var data = shopData.Data["shop"];
+
+    return { result: data };
+};
+ 
+//load my progress, new version
+//input: key for save game object
+handlers.loadMyProgress = function(args) {
+
+    response = {"message":"Unknown error"};
+
+    var currentProgress = server.GetUserData({
+        PlayFabId: currentPlayerId,
+        Keys: ["Progress","SaveOverview"]
+    });
+
+	var gameDataKeys = args.gamedatakeys;
+    var data = currentProgress.Data["Progress"];
+	if (data) {
+		/*jsonarray = [];
+		for(var i = 0; i < data.length; i++) {
+			var obj = data[i];
+			for (var property in obj)
+			{
+				for(var j = 0; j < gameDataKeys.length; j++) {
+					if (gameDataKeys[j]==property)
+						jsonarray.push(data[i]);
+				}
+			}
+		}*/
+
+		response = { result:{} };
+		
+		if( "Value" in data ) {
+		    response.result["progress"] = JSON.parse(data.Value);
+		}
+		
+
+	    if( "SaveOverview" in currentProgress.Data )
+	    {
+		    var overview = currentProgress.Data["SaveOverview"];	    	
+		    if ( overview && ( "Value" in overview ))
+		    {
+		    	response.result["overview"] = JSON.parse(overview.Value);
+		    }
+	    }
+	}
+	else {
+	    response = {"message":"Save or key not found","code":CONST_CODE_LOADPROGRESS_NOT_FOUND_USERDATA};
+	}
+
+	return response;
+};
+ 
+//Redeem Promo Code
+//input: code
+handlers.redeemPromoCode = function(args) {
+    /*Parse.Cloud.useMasterKey();
+     
+    var currentCode = Parse.Object.extend("Codes");
+    var query = new Parse.Query(currentCode);
+    var user = request.user; //
+    var inputCode = request.params.code;
+    //console.log(gameDataKeys);
+     
+    responseObj = {"message":"Unknown error"};
+    query.equalTo("codeID", inputCode);
+    query.equalTo("active", true);
+     
+    query.find ({
+    success: function(result) {
+        if ((result.length > 0)) {
+             
+            codeData = result[0].get("codeData");
+            activationCount = result[0].get("activationCount");
+            if (codeData)
+            {
+                responseObj = codeData;
+                result[0].set("activationCount",activationCount+1);
+                result[0].save();
+                response.success(responseObj);
+            }
+            else
+            {
+                //console.log("No save games");
+                responseObj = {"message":"Code not found or already redeemed"};
+                response.success(responseObj);
+            }
+        }
+        else {
+            responseObj = {"message":"Code not found"};
+            response.success(responseObj);
+        }
+         
+    },
+    error: function() {
+        responseObj = {"message":"Code not found"};
+        response.success(responseObj);
+    }
+        });*/
+};

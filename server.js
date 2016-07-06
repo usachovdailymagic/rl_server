@@ -59,7 +59,7 @@ handlers.getFriendsProgress = function(args) {
 					&& ( "Score" in ScoreData.Data ) 
 					&& ( "Value" in ScoreData.Data.Score ) )
 				{
-					result[ids[i]["FacebookId"]]["score"] = ScoreData.Data.Score.Value;
+					result[ids[i]["FacebookId"]]["score"] = JSON.parse(ScoreData.Data.Score.Value);
 				}
 				
 			}

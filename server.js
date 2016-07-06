@@ -33,7 +33,7 @@ handlers.getFriendsProgress = function(args) {
 
 	var data = server.GetPlayFabIDsFromFacebookIDs({
 // 		FacebookIDs: args.ids
-	FacebookIDs:["271802446516803"]
+	FacebookIDs:["271802446516803","621807987996023"]
 	});
 
 	var result = {};
@@ -59,7 +59,7 @@ handlers.getFriendsProgress = function(args) {
 					&& ( "Score" in ScoreData.Data ) 
 					&& ( "Value" in ScoreData.Data.Score ) )
 				{
-					result[ids[i]["FacebookId"]]["score"] = ScoreData.Data.Uuid.Value;
+					result[ids[i]["FacebookId"]]["score"] = ScoreData.Data.Score.Value;
 				}
 				
 			}

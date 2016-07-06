@@ -25,13 +25,14 @@ handlers.getFriendsProgress = function(args) {
 	FacebookIDs:["271802446516803"]
 	});
 
-	var result = {};
+	var result = {count_ids:ids.length};
 	for (var i = 0; i < ids.length; i++) {
 		var data = server.GetUserData({
 			PlayFabId: ids[i],
 			Keys: ["Scores"]
 		});
-		result[ids[i]] = data.Data[Scores];
+// 		result[ids[i]] = data.Data[Scores];
+		result[ids[i]] = "founded";
 	};
 
 	var json = JSON.stringify(result);

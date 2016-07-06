@@ -30,10 +30,15 @@ handlers.getServerTime = function(args) {
 //get friends progress
 //input: userID
 handlers.getFriendsProgress = function(args) {
-
+	var ClientIds = [];
+	if ( isObject( args ) && ( "ids" in args ) && isArray( args["ids"] ) )
+	{
+		ClientIds = args["ids"];
+	}
+	
 	var data = server.GetPlayFabIDsFromFacebookIDs({
-// 		FacebookIDs: args.ids
-	FacebookIDs:["271802446516803","621807987996023"]
+		FacebookIDs: ClientIds
+// 	FacebookIDs:["271802446516803","621807987996023"]
 	});
 
 	var result = {};

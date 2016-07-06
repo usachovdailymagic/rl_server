@@ -28,7 +28,7 @@ handlers.getServerTime = function(args) {
 }
  
 //get friends progress
-//input: userID
+//input: array if strings FacebokIds
 handlers.getFriendsProgress = function(args) {
 	var ClientIds = [];
 	if ( isObject( args ) && ( "ids" in args ) && isArray( args["ids"] ) )
@@ -41,7 +41,7 @@ handlers.getFriendsProgress = function(args) {
 // 	FacebookIDs:["271802446516803","621807987996023"]
 	});
 
-	var result = {};
+	var result = [];
 
 	if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
 	{
@@ -56,28 +56,26 @@ handlers.getFriendsProgress = function(args) {
 						Keys: ["Score"]
 					});
 				
-				result[ids[i]["FacebookId"]] = {};	
-				result[ids[i]["FacebookId"]]["PlayFabId"] = ids[i]["PlayFabId"];
-				result[ids[i]["FacebookId"]]["score"] = [];
+				FriendElement = {FacebookId:ids[i]["FacebookId"]};
+				FriendElement["PlayFabId"] = ids[i]["PlayFabId"];
+				FriendElement["score"] = [];
 				if ( isObject( ScoreData ) 
 					&& ( "Data" in ScoreData ) 
 					&& ( "Score" in ScoreData.Data ) 
 					&& ( "Value" in ScoreData.Data.Score ) )
 				{
-					result[ids[i]["FacebookId"]]["score"] = JSON.parse(ScoreData.Data.Score.Value);
+					FriendElement["score"] = JSON.parse(ScoreData.Data.Score.Value);
 				}
-				
+				result.push( FriendElement );
 			}
 		};
-		
 	}
 	else
 	{
 		result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND, msg: "Bad response at getFriendsProgress"};		
 	}
 	
-	var test_int = Math.min(2,3);
-	return { result : result, code: 123, test_int: test_int };
+	return {result: result};
 };
 
 //get custom id. Which means our uuid of app on the device

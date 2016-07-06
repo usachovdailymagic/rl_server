@@ -1,6 +1,17 @@
-var CONST_CODE_LOADPROGRESS_NOT_FOUND_USERDATA 	= 1001;
-var CONST_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 	= 2001;
-//
+//----------------Value constants---------------------
+var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5;
+//----------------End Value constants---------------------
+
+//----------------Errors---------------------
+// 1XXX Errors for Load Save Reset operations
+var CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA	= 1001;
+
+// 2XXX Errors for System additional operations
+var CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 		= 2001;
+
+// 3XXX Errors for FB interaction operations
+var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		= 3001;
+//----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
     return val instanceof Object; 
@@ -20,24 +31,37 @@ handlers.getServerTime = function(args) {
 //input: userID
 handlers.getFriendsProgress = function(args) {
 
-	var ids = server.GetPlayFabIDsFromFacebookIDs({
+	var data = server.GetPlayFabIDsFromFacebookIDs({
 // 		FacebookIDs: args.ids
 	FacebookIDs:["271802446516803"]
 	});
 
+	var result = {};
+
+	if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
+	{
+		var ids = data["Data"];
+		
+		for (var i = 0; i < ids.length; i++) {
+			var data = server.GetUserData({
+					PlayFabId: ids[i],
+					Keys: ["Scores"]
+				});
+		// 		result[ids[i]] = data.Data[Scores];
+				result[ids[i]] = "founded";
+		};
+		
+	}
+	else
+	{
+		result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND, msg: "Bad response at getFriendsProgress"};		
+	}
 	var result = {count_ids:ids.length};
-	for (var i = 0; i < ids.length; i++) {
-		var data = server.GetUserData({
-			PlayFabId: ids[i],
-			Keys: ["Scores"]
-		});
-// 		result[ids[i]] = data.Data[Scores];
-		result[ids[i]] = "founded";
-	};
+	
 
 	var json = JSON.stringify(result);
-
-	return { result : result, code: 123 };
+	var test_int = Math.min(2,3);
+	return { result : result, code: 123, test_int: test_int };
 };
 
 //get custom id. Which means our uuid of app on the device
@@ -61,7 +85,7 @@ handlers.getCustomId = function(args) {
 	}
 	else
 	{
-		result = {"message":"Uuid not found","code":CONST_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID};	
+		result = {"message":"Uuid not found","code":CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID};	
 	}	
 
 	return result;
@@ -247,7 +271,7 @@ handlers.loadMyProgress = function(args) {
 	    }
 	}
 	else {
-	    response = {"message":"Save or key not found","code":CONST_CODE_LOADPROGRESS_NOT_FOUND_USERDATA};
+	    response = {"message":"Save or key not found","code":CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA};
 	}
 
 	return response;

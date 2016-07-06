@@ -37,7 +37,7 @@ handlers.getFriendsProgress = function(args) {
 
 	var json = JSON.stringify(result);
 
-	return { result : json };
+	return { result : result, code: 123 };
 };
 
 //get custom id. Which means our uuid of app on the device

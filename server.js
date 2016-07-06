@@ -41,15 +41,26 @@ handlers.getFriendsProgress = function(args) {
 	if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
 	{
 		var ids = data["Data"];
+		var CountFriends = Math.min( ids.length, CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY );
 		
-		for (var i = 0; i < ids.length; i++) {
+		for (var i = 0; i < CountFriends; i++) {
 			if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
 			{
-				var data = server.GetUserData({
-					PlayFabId: ids[i]["PlayFabId"],
-					Keys: ["Scores"]
-				});
-				result[ids[i]["PlayFabId"]] = "founded"+ids[i]["FacebookId"];
+				var ScoreData = server.GetUserData({
+						PlayFabId: ids[i]["PlayFabId"],
+						Keys: ["Score"]
+					});
+					
+				result[ids[i]["FacebookId"]]["PlayFabId"] = ids[i]["PlayFabId"];
+				result[ids[i]["FacebookId"]]["score"] = [];
+				if ( isObject( ScoreData ) 
+					&& ( "Data" in ScoreData ) 
+					&& ( "Score" in ScoreData.Data ) 
+					&& ( "Value" in ScoreData.Data.Score ) )
+				{
+					result[ids[i]["FacebookId"]]["score"] = ScoreData.Data.Uuid.Value;
+				}
+				
 			}
 		};
 		

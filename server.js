@@ -43,12 +43,14 @@ handlers.getFriendsProgress = function(args) {
 		var ids = data["Data"];
 		
 		for (var i = 0; i < ids.length; i++) {
-			var data = server.GetUserData({
-					PlayFabId: ids[i],
+			if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
+			{
+				var data = server.GetUserData({
+					PlayFabId: ids[i]["PlayFabId"],
 					Keys: ["Scores"]
 				});
-		// 		result[ids[i]] = data.Data[Scores];
-				result[ids[i]] = "founded";
+				result[ids[i]["PlayFabId"]] = "founded"+ids[i]["FacebookId"];
+			}
 		};
 		
 	}
@@ -56,10 +58,7 @@ handlers.getFriendsProgress = function(args) {
 	{
 		result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND, msg: "Bad response at getFriendsProgress"};		
 	}
-	var result = {count_ids:ids.length};
 	
-
-	var json = JSON.stringify(result);
 	var test_int = Math.min(2,3);
 	return { result : result, code: 123, test_int: test_int };
 };

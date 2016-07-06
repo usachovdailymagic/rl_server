@@ -50,7 +50,8 @@ handlers.getFriendsProgress = function(args) {
 						PlayFabId: ids[i]["PlayFabId"],
 						Keys: ["Score"]
 					});
-					
+				
+				result[ids[i]["FacebookId"]] = {};	
 				result[ids[i]["FacebookId"]]["PlayFabId"] = ids[i]["PlayFabId"];
 				result[ids[i]["FacebookId"]]["score"] = [];
 				if ( isObject( ScoreData ) 

@@ -22,7 +22,7 @@ handlers.getFriendsProgress = function(args) {
 
 	var ids = server.GetPlayFabIDsFromFacebookIDs({
 // 		FacebookIDs: args.ids
-	FacebookIDs:[]
+	FacebookIDs:["271802446516803"]
 	});
 
 	var result = {};

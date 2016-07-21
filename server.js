@@ -78,8 +78,8 @@ handlers.sendFriendGift = function(args) {
                 GiftElement["GiftResult"] = false;
                 if ( isObject( GiftsData )
                     && ( "Data" in GiftsData )
-                    && ( CONST_KEY_SERVER_FIELD_SCORE in GiftsData.Data )
-                    && ( "Value" in GiftsData.Data[CONST_KEY_SERVER_FIELD_SCORE] ) )
+                    && ( CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED in GiftsData.Data )
+                    && ( "Value" in GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] ) )
                 {
                     GiftElement["GiftsData"] = getSeverTimestamp() + "_S_" + currentPlayerId;
                 }

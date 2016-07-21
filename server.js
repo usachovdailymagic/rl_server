@@ -221,8 +221,11 @@ handlers.saveMyProgress = function(args) {
     }
 
     var json = JSON.stringify(SaveGame);
-    
-    var SaveObject = {CONST_KEY_SERVER_FIELD_GAME_PROGRESS:json, CONST_KEY_SERVER_FIELD_UUID:uuid_to_save};
+
+    var SaveObject = {};
+
+    SaveObject[CONST_KEY_SERVER_FIELD_GAME_PROGRESS] = json;
+    SaveObject[CONST_KEY_SERVER_FIELD_UUID] = uuid_to_save;
     
     if ( ScoreData != null )
     {

@@ -6,6 +6,7 @@ var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to rec
 var CONST_KEY_SERVER_FIELD_GAME_PROGRESS				= "Progress";
 var CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW				= "SaveOverview";
 var CONST_KEY_SERVER_FIELD_UUID        					= "Uuid";
+var CONST_KEY_SERVER_FIELD_SCORE        				= "Score";
 var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED				= "GiftsReceived";
 var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
 //----------------End Server keys constants---------------------
@@ -61,7 +62,7 @@ handlers.getFriendsProgress = function(args) {
 			{
 				var ScoreData = server.GetUserData({
 						PlayFabId: ids[i]["PlayFabId"],
-						Keys: ["Score"]
+						Keys: [CONST_KEY_SERVER_FIELD_SCORE]
 					});
 				
 				FriendElement = {FacebookId:ids[i]["FacebookId"]};
@@ -69,10 +70,10 @@ handlers.getFriendsProgress = function(args) {
 				FriendElement["score"] = [];
 				if ( isObject( ScoreData ) 
 					&& ( "Data" in ScoreData ) 
-					&& ( "Score" in ScoreData.Data ) 
-					&& ( "Value" in ScoreData.Data.Score ) )
+					&& ( CONST_KEY_SERVER_FIELD_SCORE in ScoreData.Data )
+					&& ( "Value" in ScoreData.Data[CONST_KEY_SERVER_FIELD_SCORE] ) )
 				{
-					FriendElement["score"] = JSON.parse(ScoreData.Data.Score.Value);
+					FriendElement["score"] = JSON.parse(ScoreData.Data[CONST_KEY_SERVER_FIELD_SCORE].Value);
 				}
 				result.push( FriendElement );
 			}
@@ -119,8 +120,8 @@ handlers.resetProgress = function(args) {
 
 	server.UpdateUserData({
 		PlayFabId: currentPlayerId,
-		Data: { 
-			"Progress": null,
+		Data: {
+            CONST_KEY_SERVER_FIELD_GAME_PROGRESS: null,
 			"Scores": null
 		}
 	});
@@ -133,16 +134,16 @@ handlers.saveMyProgress = function(args) {
 
     var userData = server.GetUserData({
     	PlayFabId: currentPlayerId,
-        Keys: ["Progress"]
+        Keys: [CONST_KEY_SERVER_FIELD_GAME_PROGRESS]
     });
     
     var SaveGame = [];
     
-    if( "Progress" in userData.Data )
+    if( CONST_KEY_SERVER_FIELD_GAME_PROGRESS in userData.Data )
     {
-    	if( "Value" in userData.Data.Progress )
+    	if( "Value" in userData.Data[CONST_KEY_SERVER_FIELD_GAME_PROGRESS] )
     	{
-    		SaveGame = JSON.parse(userData.Data.Progress.Value);
+    		SaveGame = JSON.parse(userData.Data[CONST_KEY_SERVER_FIELD_GAME_PROGRESS].Value);
     	}
     }
     
@@ -221,15 +222,15 @@ handlers.saveMyProgress = function(args) {
 
     var json = JSON.stringify(SaveGame);
     
-    var SaveObject = {"Progress":json, CONST_KEY_SERVER_FIELD_UUID:uuid_to_save};
+    var SaveObject = {CONST_KEY_SERVER_FIELD_GAME_PROGRESS:json, CONST_KEY_SERVER_FIELD_UUID:uuid_to_save};
     
     if ( ScoreData != null )
     {
-    	SaveObject.Score = ScoreData;
+    	SaveObject[CONST_KEY_SERVER_FIELD_SCORE] = ScoreData;
     }
     if ( SaveOverview != null )
     {
-    	SaveObject.SaveOverview = SaveOverview;
+    	SaveObject[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW] = SaveOverview;
     }
 
     server.UpdateUserData({
@@ -258,11 +259,11 @@ handlers.loadMyProgress = function(args) {
 
     var currentProgress = server.GetUserData({
         PlayFabId: currentPlayerId,
-        Keys: ["Progress","SaveOverview", CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]
+        Keys: [CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]
     });
 
 	var gameDataKeys = args.gamedatakeys;
-    var data = currentProgress.Data["Progress"];
+    var data = currentProgress.Data[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
 	if (data) {
 		/*jsonarray = [];
 		for(var i = 0; i < data.length; i++) {
@@ -283,9 +284,9 @@ handlers.loadMyProgress = function(args) {
 		}
 		
 
-	    if( "SaveOverview" in currentProgress.Data )
+	    if( CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW in currentProgress.Data )
 	    {
-		    var overview = currentProgress.Data["SaveOverview"];	    	
+		    var overview = currentProgress.Data[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
 		    if ( overview && ( "Value" in overview ))
 		    {
 		    	response.result["overview"] = JSON.parse(overview.Value);
@@ -425,10 +426,10 @@ handlers.getPvpPlayers = function(args) {
 
 			var currentProgress = server.GetUserData({
 			    PlayFabId: player.PlayFabId,
-				Keys: ["Progress"]
+				Keys: [CONST_KEY_SERVER_FIELD_GAME_PROGRESS]
 			});
 
-			var data = currentProgress.Data["Progress"];
+			var data = currentProgress.Data[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
 
 			var progress = {};
 			

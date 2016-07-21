@@ -1,6 +1,14 @@
 //----------------Value constants---------------------
-var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5;
+var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
 //----------------End Value constants---------------------
+
+//----------------Server keys constants---------------------
+var CONST_KEY_SERVER_FIELD_GAME_PROGRESS				= "Progress";
+var CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW				= "SaveOverview";
+var CONST_KEY_SERVER_FIELD_UUID        					= "Uuid";
+var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED				= "GiftsReceived";
+var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
+//----------------End Server keys constants---------------------
 
 //----------------Errors---------------------
 // 1XXX Errors for Load Save Reset operations
@@ -85,7 +93,7 @@ handlers.getCustomId = function(args) {
 	var result = {"isFbAcc":false};
 	var data = server.GetUserData({
 		PlayFabId: currentPlayerId,
-			Keys: ["Uuid"]
+			Keys: [CONST_KEY_SERVER_FIELD_UUID]
 	});
 	
 	if ( isObject(args) && ( "isFbAcc" in args ) )
@@ -93,9 +101,9 @@ handlers.getCustomId = function(args) {
 		result.isFbAcc = args.isFbAcc;
 	}
 	
-	if ( isObject( data ) && ( "Data" in data ) && ( "Uuid" in data.Data ) && ( "Value" in data.Data.Uuid ) )
+	if ( isObject( data ) && ( "Data" in data ) && ( CONST_KEY_SERVER_FIELD_UUID in data.Data ) && ( "Value" in data.Data[CONST_KEY_SERVER_FIELD_UUID] ) )
 	{
-		result.Uuid = data.Data.Uuid.Value;
+		result[CONST_KEY_SERVER_FIELD_UUID] = data.Data[CONST_KEY_SERVER_FIELD_UUID].Value;
 	}
 	else
 	{
@@ -213,7 +221,7 @@ handlers.saveMyProgress = function(args) {
 
     var json = JSON.stringify(SaveGame);
     
-    var SaveObject = {"Progress":json, "Uuid":uuid_to_save};
+    var SaveObject = {"Progress":json, CONST_KEY_SERVER_FIELD_UUID:uuid_to_save};
     
     if ( ScoreData != null )
     {
@@ -250,7 +258,7 @@ handlers.loadMyProgress = function(args) {
 
     var currentProgress = server.GetUserData({
         PlayFabId: currentPlayerId,
-        Keys: ["Progress","SaveOverview"]
+        Keys: ["Progress","SaveOverview", CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]
     });
 
 	var gameDataKeys = args.gamedatakeys;

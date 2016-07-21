@@ -48,7 +48,7 @@ handlers.getServerTime = function(args) {
 //input: friendFbId, item - type of resource to gift, count - count of resources
 handlers.sendFriendGift = function(args) {
     var FriendsIds = [];
-    if ( isObject( args ) && ( "friendFbId" in args ) && ( "item" in args ) && ( "count" in args ) )
+    if ( isObject( args ) && ( "friendFbId" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         FriendsIds = [args["friendFbId"]];
     }

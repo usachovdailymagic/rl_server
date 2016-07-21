@@ -13,13 +13,14 @@ var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
 
 //----------------Errors---------------------
 // 1XXX Errors for Load Save Reset operations
-var CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA	= 1001;
+var CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA	            = 1001;
 
 // 2XXX Errors for System additional operations
-var CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 		= 2001;
+var CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 		            = 2001;
 
 // 3XXX Errors for FB interaction operations
-var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		= 3001;
+var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		            = 3001;
+var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND	 	= 3002;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -29,12 +30,70 @@ function isObject(val) {
 function isArray(val) {
     return val instanceof Array; 
 }
+//------------------------------------------------------------------
+function getSeverTimestamp() {
+    var now = new Date();
+    var time = now.getTime();
+
+    return time;
+}
 
 handlers.getServerTime = function(args) {
 	var now = new Date();
 	var time = now.getTime();
     return { serverTime: time };
 }
+
+//sending gift to friend
+//input: friendFbId, item - type of resource to gift, count - count of resources
+handlers.sendFriendGift = function(args) {
+    var FriendsIds = [];
+    if ( isObject( args ) && ( "friendFbId" in args ) && ( "item" in args ) && ( "count" in args ) )
+    {
+        FriendsIds = [args["friendFbId"]];
+    }
+
+    var data = server.GetPlayFabIDsFromFacebookIDs({
+        FacebookIDs: FriendsIds
+// 	FacebookIDs:["271802446516803","621807987996023"]
+    });
+
+    var result = [];
+
+    if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
+    {
+        var ids = data["Data"];
+        var CountFriends = ids.length;
+
+        for (var i = 0; i < CountFriends; i++) {
+            if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
+            {
+                var GiftsData = server.GetUserData({
+                    PlayFabId: ids[i]["PlayFabId"],
+                    Keys: [CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]
+                });
+
+                GiftElement = {FacebookId:ids[i]["FacebookId"]};
+                GiftElement["PlayFabId"] = ids[i]["PlayFabId"];
+                GiftElement["GiftResult"] = false;
+                if ( isObject( GiftsData )
+                    && ( "Data" in GiftsData )
+                    && ( CONST_KEY_SERVER_FIELD_SCORE in GiftsData.Data )
+                    && ( "Value" in GiftsData.Data[CONST_KEY_SERVER_FIELD_SCORE] ) )
+                {
+                    GiftElement["GiftsData"] = getSeverTimestamp() + "_S_" + currentPlayerId;
+                }
+                result.push( GiftElement );
+            }
+        };
+    }
+    else
+    {
+        result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND, msg: "Bad response at sendFriendGift"};
+    }
+
+    return {result: result};
+};
  
 //get friends progress
 //input: array if strings FacebokIds
@@ -296,6 +355,24 @@ handlers.loadMyProgress = function(args) {
 		    	response.result["overview"] = JSON.parse(overview.Value);
 		    }
 	    }
+
+        if( CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED in currentProgress.Data )
+        {
+            var gifts = currentProgress.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
+            if ( gifts && ( "Value" in gifts ))
+            {
+                response.result["gifts"] = JSON.parse(gifts.Value);
+            }
+        }
+
+        if( CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP in currentProgress.Data )
+        {
+            var gift_timers = currentProgress.Data[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
+            if ( gift_timers && ( "Value" in gift_timers ))
+            {
+                response.result["gift_timers"] = JSON.parse(gift_timers.Value);
+            }
+        }
 	}
 	else {
 	    response = {"message":"Save or key not found","code":CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA};

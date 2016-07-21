@@ -118,12 +118,13 @@ handlers.getCustomId = function(args) {
 //input: none
 handlers.resetProgress = function(args) {
 
+    var ResetData = {};
+    ResetData[CONST_KEY_SERVER_FIELD_GAME_PROGRESS] = null;
+    ResetData[CONST_KEY_SERVER_FIELD_SCORE] = null;
+
 	server.UpdateUserData({
 		PlayFabId: currentPlayerId,
-		Data: {
-            CONST_KEY_SERVER_FIELD_GAME_PROGRESS: null,
-			"Scores": null
-		}
+		Data: ResetData
 	});
 };
  

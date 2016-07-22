@@ -33,9 +33,11 @@ function isArray(val) {
 }
 //------------------------------------------------------------------
 function getSeverTimestamp() {
+    log.info("getSeverTimestamp called");
     var now = new Date();
+    log.info("getSeverTimestamp "+now);
     var time = now.getTime();
-
+    log.info("getSeverTimestamp "+time);
     return time;
 }
 // Represents Gift class.

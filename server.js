@@ -47,7 +47,7 @@ function cGift(sender, itemType, amount)
         this.mAmount = amount;
     }
 
-    GetSaveObject()
+    this.GetSaveObject = function()
     {
         return {"sender":this.mSender,"itemType":this.itemType};
     }

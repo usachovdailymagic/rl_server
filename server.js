@@ -137,11 +137,11 @@ handlers.sendFriendGift = function(args) {
                     result.push( GiftElement );
 
                     var UpdateGiftsData = {};
-                    UpdateGiftsData[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = AllGifts;
+                    UpdateGiftsData[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = JSON.stringify(AllGifts);
 
                     var resp = server.UpdateUserData({
                         PlayFabId: ids[i]["PlayFabId"],
-                        Data: JSON.stringify(UpdateGiftsData)
+                        Data: UpdateGiftsData
                     });
 
                 }

@@ -141,10 +141,9 @@ handlers.sendFriendGift = function(args) {
 
                     var resp = server.UpdateUserData({
                         PlayFabId: ids[i]["PlayFabId"],
-                        Data: UpdateGiftsData
+                        Data: JSON.stringify(UpdateGiftsData)
                     });
 
-                    log.info("RESPONSE = "+JSON.stringify(resp) + " REQUEST = "+JSON.stringify(UpdateGiftsData));
                 }
             };
         }

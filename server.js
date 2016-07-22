@@ -38,6 +38,37 @@ function getSeverTimestamp() {
     return time;
 }
 
+class cGift
+{
+    constructor (sender, itemType, amount)
+    {
+        this.mSender = sender;
+        this.mItemType = itemType;
+        this.mAmount = amount;
+    }
+
+    GetSaveObject()
+    {
+        return {"sender":mSender,"itemType":itemType};
+    }
+}
+
+//------------------------------------------------------------------
+// Adds new gift for existing. Params:
+// gifts - array of old gifts
+// sender - fbId of sender
+// itemType - type of gift resource
+// amount - amount of resources
+// returns New generated array of gifts
+function addNewGiftToExisting( gifts, sender, itemType, amount ) {
+    if ( !isArray( gifts ) )
+    {
+        gifts = [];
+    }
+    GiftElement = {};
+    gifts.push();
+}
+
 handlers.getServerTime = function(args) {
 	var now = new Date();
 	var time = now.getTime();
@@ -83,6 +114,9 @@ handlers.sendFriendGift = function(args) {
                 {
                     GiftElement["GiftsData"] = getSeverTimestamp() + "_S_" + currentPlayerId;
                 }
+                GiftElement["TestClass"] = {};
+                Gifttest = new cGift(currentPlayerId,"en",1);
+                GiftElement["TestClass"] = Gifttest.GetSaveObject();
                 result.push( GiftElement );
             }
         };

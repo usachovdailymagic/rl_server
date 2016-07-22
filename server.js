@@ -49,7 +49,7 @@ function cGift(sender, itemType, amount, id)
 
         if ( id == -1 )
         {
-            this.GenerateId();
+            GenerateId();
         }
     }
 //public
@@ -63,7 +63,7 @@ function cGift(sender, itemType, amount, id)
 //private
     function GenerateId()
     {
-        this.mId = getSeverTimestamp() + "_S_" + this.sender;
+        this.mId = toString(getSeverTimestamp()) + "_S_" + this.mSender;
     }
 }
 

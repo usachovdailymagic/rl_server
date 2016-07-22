@@ -120,8 +120,7 @@ handlers.sendFriendGift = function(args) {
                         Keys: [CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]
                     });
                     var AllGifts = [];
-                    GiftElement = {FacebookId:ids[i]["FacebookId"]};
-                    GiftElement["PlayFabId"] = ids[i]["PlayFabId"];
+                    GiftElement = {};
 
                     if ( isObject( GiftsData )
                         && ( "Data" in GiftsData )

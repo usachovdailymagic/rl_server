@@ -39,17 +39,17 @@ function getSeverTimestamp() {
     return time;
 }
 // Represents Gift class.
-function cGift(sender, itemType, amount, id)
+function cGift(sender, itemType, amount, uid)
 {
-    constructor (sender, itemType, amount, id)
+    constructor (sender, itemType, amount, uid)
     {
         this.mSender = sender;
         this.mItemType = itemType;
         this.mAmount = amount;
 
-        if ( id == -1 )
+        if ( uid == -1 )
         {
-            GenerateId();
+            this.mId = GenerateId( this.mSender );
         }
     }
 //public
@@ -61,9 +61,9 @@ function cGift(sender, itemType, amount, id)
             , "id": this.mId};
     }
 //private
-    function GenerateId()
+    function GenerateId( sender )
     {
-        this.mId = toString(getSeverTimestamp()) + "_S_" + this.mSender;
+        return toString(getSeverTimestamp()) + "_S_" + sender;
     }
 }
 

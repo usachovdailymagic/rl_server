@@ -122,20 +122,21 @@ handlers.sendFriendGift = function(args) {
                     var AllGifts = [];
                     GiftElement = {FacebookId:ids[i]["FacebookId"]};
                     GiftElement["PlayFabId"] = ids[i]["PlayFabId"];
-                    GiftElement["GiftResult"] = false;
+
                     if ( isObject( GiftsData )
                         && ( "Data" in GiftsData )
                         && ( CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED in GiftsData.Data )
                         && ( "Value" in GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] ) )
                     {
-//                    GiftElement["GiftsData"] =
                         AllGifts = JSON.parse(GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED].Value);
                     }
-                    GiftElement["TestClass"] = [];
+
                     AllGifts = addNewGiftToExisting(AllGifts,IncomingGift);
-                    GiftElement["TestClass"] = AllGifts;
+// TODO aleksey remove debug info
+                    GiftElement["TestInfoAboutFriendGifts"] = AllGifts;
                     result.push( GiftElement );
 
+//                  Save new gift data at friends field
                     var UpdateGiftsData = {};
                     UpdateGiftsData[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = JSON.stringify(AllGifts);
 
@@ -144,6 +145,9 @@ handlers.sendFriendGift = function(args) {
                         Data: UpdateGiftsData
                     });
 
+// TODO aleksey get friends gift request
+                    GiftElement[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] = [];
+                    GiftElement["GiftResult"] = true;
                 }
             };
         }

@@ -144,7 +144,7 @@ handlers.sendFriendGift = function(args) {
                         Data: UpdateGiftsData
                     });
 
-                    log.info("RESPONSE = "+JSON.stringify(resp));
+                    log.info("RESPONSE = "+JSON.stringify(resp) + " REQUEST = "+JSON.stringify(UpdateGiftsData));
                 }
             };
         }

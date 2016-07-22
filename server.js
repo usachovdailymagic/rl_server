@@ -49,7 +49,7 @@ function cGift(sender, itemType, amount, id)
 
         if ( id == -1 )
         {
-            GenerateId();
+            this.GenerateId();
         }
     }
 //public
@@ -96,7 +96,7 @@ handlers.sendFriendGift = function(args) {
     if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         var FriendsIds = [];
-        var IncomingGift = new cGift( args["senderFbId"], args["senderFbId"], args["senderFbId"], -1 );
+        var IncomingGift = new cGift( args["senderFbId"], args["itemType"], args["count"], -1 );
         FriendsIds = [args["friendFbId"]];
 
 

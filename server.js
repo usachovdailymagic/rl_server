@@ -67,8 +67,10 @@ function cGift(sender, itemType, amount, uid)
     {
         var tmstmp = getSeverTimestamp();
         log.info("GenerateId "+tmstmp);
-        log.info("GenerateId "+(toString(tmstmp) + "_S_" + sender));
-        return toString(tmstmp) + "_S_" + sender;
+        toString("")
+        log.info("GenerateId "+(tmstmp + "_S_" + sender));
+        log.info("GenerateId "+(tmstmp.toString() + "_S_" + sender));
+        return (tmstmp.toString() + "_S_" + sender);
     }
 }
 

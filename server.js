@@ -21,6 +21,7 @@ var CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 		            = 2001;
 // 3XXX Errors for FB interaction operations
 var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		            = 3001;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND	 	= 3002;
+var CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING            	 	= 3003;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -40,7 +41,7 @@ function getSeverTimestamp() {
 // Represents Gift class.
 function cGift(sender, itemType, amount, id)
 {
-    constructor (sender, itemType, amount)
+    constructor (sender, itemType, amount, id)
     {
         this.mSender = sender;
         this.mItemType = itemType;
@@ -60,27 +61,26 @@ function cGift(sender, itemType, amount, id)
             , "id": this.mId};
     }
 //private
-    function GenerateId(senderId)
+    function GenerateId()
     {
         this.mId = getSeverTimestamp() + "_S_" + this.sender;
     }
-
 }
 
 //------------------------------------------------------------------
 // Adds new gift for existing. Params:
 // gifts - array of old gifts
-// sender - fbId of sender
-// itemType - type of gift resource
-// amount - amount of resources
+// new_gift - cGift new element
 // returns New generated array of gifts
-function addNewGiftToExisting( gifts, sender, itemType, amount ) {
+function addNewGiftToExisting( gifts, new_gift ) {
     if ( !isArray( gifts ) )
     {
         gifts = [];
     }
-    GiftElement = {};
-    gifts.push();
+
+    gifts.push( new_gift.GetSaveObject() );
+
+    return gifts;
 }
 
 handlers.getServerTime = function(args) {
@@ -90,54 +90,69 @@ handlers.getServerTime = function(args) {
 }
 
 //sending gift to friend
-//input: friendFbId, item - type of resource to gift, count - count of resources
+//input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
 handlers.sendFriendGift = function(args) {
-    var FriendsIds = [];
-    if ( isObject( args ) && ( "friendFbId" in args ) && ( "itemType" in args ) && ( "count" in args ) )
-    {
-        FriendsIds = [args["friendFbId"]];
-    }
-
-    var data = server.GetPlayFabIDsFromFacebookIDs({
-        FacebookIDs: FriendsIds
-// 	FacebookIDs:["271802446516803","621807987996023"]
-    });
-
     var result = [];
-
-    if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
+    if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
-        var ids = data["Data"];
-        var CountFriends = ids.length;
+        var FriendsIds = [];
+        var IncomingGift = new cGift( args["senderFbId"], args["senderFbId"], args["senderFbId"], -1 );
+        FriendsIds = [args["friendFbId"]];
 
-        for (var i = 0; i < CountFriends; i++) {
-            if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
-            {
-                var GiftsData = server.GetUserData({
-                    PlayFabId: ids[i]["PlayFabId"],
-                    Keys: [CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]
-                });
 
-                GiftElement = {FacebookId:ids[i]["FacebookId"]};
-                GiftElement["PlayFabId"] = ids[i]["PlayFabId"];
-                GiftElement["GiftResult"] = false;
-                if ( isObject( GiftsData )
-                    && ( "Data" in GiftsData )
-                    && ( CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED in GiftsData.Data )
-                    && ( "Value" in GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] ) )
+
+        var data = server.GetPlayFabIDsFromFacebookIDs({
+            FacebookIDs: FriendsIds
+// 	FacebookIDs:["271802446516803","621807987996023"]
+        });
+
+        if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
+        {
+            var ids = data["Data"];
+            var CountFriends = ids.length;
+
+            for (var i = 0; i < CountFriends; i++) {
+                if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
                 {
+                    var GiftsData = server.GetUserData({
+                        PlayFabId: ids[i]["PlayFabId"],
+                        Keys: [CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]
+                    });
+                    var AllGifts = [];
+                    GiftElement = {FacebookId:ids[i]["FacebookId"]};
+                    GiftElement["PlayFabId"] = ids[i]["PlayFabId"];
+                    GiftElement["GiftResult"] = false;
+                    if ( isObject( GiftsData )
+                        && ( "Data" in GiftsData )
+                        && ( CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED in GiftsData.Data )
+                        && ( "Value" in GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] ) )
+                    {
 //                    GiftElement["GiftsData"] =
+                        AllGifts = JSON.parse(GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED].Value);
+                    }
+                    GiftElement["TestClass"] = [];
+                    AllGifts = addNewGiftToExisting(AllGifts,IncomingGift);
+                    GiftElement["TestClass"] = AllGifts;
+                    result.push( GiftElement );
+
+                    var UpdateGiftsData = {};
+                    UpdateGiftsData[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = AllGifts;
+
+                    server.UpdateUserData({
+                        PlayFabId: ids[i]["PlayFabId"],
+                        Data: UpdateGiftsData
+                    });
                 }
-                GiftElement["TestClass"] = {};
-                Gifttest = new cGift(currentPlayerId, "en", 1, -1);
-                GiftElement["TestClass"] = Gifttest.GetSaveObject();
-                result.push( GiftElement );
-            }
-        };
+            };
+        }
+        else
+        {
+            result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND, msg: "Bad response at sendFriendGift"};
+        }
     }
     else
     {
-        result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND, msg: "Bad response at sendFriendGift"};
+        result = {code:CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING, msg: "Bad request data at sendFriendGift"};
     }
 
     return {result: result};

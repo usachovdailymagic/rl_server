@@ -33,11 +33,9 @@ function isArray(val) {
 }
 //------------------------------------------------------------------
 function getSeverTimestamp() {
-    log.info("getSeverTimestamp called");
     var now = new Date();
-    log.info("getSeverTimestamp "+now);
     var time = now.getTime();
-    log.info("getSeverTimestamp "+time);
+
     return time;
 }
 // Represents Gift class.
@@ -48,6 +46,7 @@ function cGift(sender, itemType, amount, uid)
         this.mSender = sender;
         this.mItemType = itemType;
         this.mAmount = amount;
+        this.mId = uid;
 
         if ( uid == -1 )
         {
@@ -66,10 +65,6 @@ function cGift(sender, itemType, amount, uid)
     function GenerateId( sender )
     {
         var tmstmp = getSeverTimestamp();
-        log.info("GenerateId "+tmstmp);
-        toString("")
-        log.info("GenerateId "+(tmstmp + "_S_" + sender));
-        log.info("GenerateId "+(tmstmp.toString() + "_S_" + sender));
         return (tmstmp.toString() + "_S_" + sender);
     }
 }
@@ -91,8 +86,7 @@ function addNewGiftToExisting( gifts, new_gift ) {
 }
 
 handlers.getServerTime = function(args) {
-	var now = new Date();
-	var time = now.getTime();
+	var time = getSeverTimestamp();
     return { serverTime: time };
 }
 
@@ -145,10 +139,12 @@ handlers.sendFriendGift = function(args) {
                     var UpdateGiftsData = {};
                     UpdateGiftsData[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = AllGifts;
 
-                    server.UpdateUserData({
+                    var resp = server.UpdateUserData({
                         PlayFabId: ids[i]["PlayFabId"],
                         Data: UpdateGiftsData
                     });
+
+                    log.info("RESPONSE = "+JSON.stringify(resp));
                 }
             };
         }

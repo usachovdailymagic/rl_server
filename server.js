@@ -144,7 +144,7 @@ handlers.sendFriendGift = function(args) {
                         Data: UpdateGiftsData
                     });
 
-// TODO aleksey get friends gift request
+// TODO aleksey get friends send gifts timers
                     GiftElement[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] = [];
                     GiftElement["GiftResult"] = true;
                 }

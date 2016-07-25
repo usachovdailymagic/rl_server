@@ -39,11 +39,12 @@ function getSeverTimestamp() {
     return time;
 }
 // Represents Gift class.
-function cGift(sender, itemType, amount, uid)
+function cGift(sender, networkType, itemType, amount, uid)
 {
-    constructor (sender, itemType, amount, uid)
+    constructor (sender, networkType, itemType, amount, uid)
     {
         this.mSender = sender;
+        this.mNetworkType = networkType;
         this.mItemType = itemType;
         this.mAmount = amount;
         this.mId = uid;
@@ -57,6 +58,7 @@ function cGift(sender, itemType, amount, uid)
     this.GetSaveObject = function()
     {
         return {"sender":this.mSender
+            , "networkType":this.mNetworkType
             , "itemType":this.mItemType
             , "amount":this.mAmount
             , "id": this.mId};
@@ -94,10 +96,10 @@ handlers.getServerTime = function(args) {
 //input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
 handlers.sendFriendGift = function(args) {
     var result = [];
-    if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "itemType" in args ) && ( "count" in args ) )
+    if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         var FriendsIds = [];
-        var IncomingGift = new cGift( args["senderFbId"], args["itemType"], args["count"], -1 );
+        var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1 );
         FriendsIds = [args["friendFbId"]];
 
 

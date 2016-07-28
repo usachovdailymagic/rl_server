@@ -82,6 +82,7 @@ Contains part of logic, some things are in handler methods without use of cUser
  **************/
 function cUser(playFabId, facebookId, uuid)
 {
+//---public members---
     this.mPlayFabId = playFabId;
     this.mFacebookId = facebookId;
     this.mUuid = uuid;
@@ -93,8 +94,10 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_SCORE]        				= [];
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]				= [];
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]			= {};
+//---private members---
+    var mDbFieldsInitedSuccessfully = false;
 
-//public
+//---public methods---
 //--------------------------------------------
     this.readDbFields = function(keys)
     {
@@ -107,6 +110,8 @@ function cUser(playFabId, facebookId, uuid)
 
             if ( isObject( Data ) && ( "Data" in Data ) )
             {
+                SetDbInited(true);
+
                 var Len = keys.length;
                 for ( var i = 0; i < Len; ++i )
                 {
@@ -122,6 +127,10 @@ function cUser(playFabId, facebookId, uuid)
                         this.mDbFields[Key] = ParseResult;
                     }
                 }
+            }
+            else
+            {
+                SetDbInited(false);
             }
         }
     }
@@ -205,8 +214,16 @@ returns bool value
         return false;
     }
 //--------------------------------------------
-//private methods
-
+    this.isInitedSuccessfully = function()
+    {
+        return mDbFieldsInitedSuccessfully;
+    }
+//--------------------------------------------
+//---private methods---
+    function SetDbInited(success)
+    {
+        mDbFieldsInitedSuccessfully = success;
+    }
 }//End cUser
 
 //------------------------------------------------------------------
@@ -511,8 +528,19 @@ handlers.getShop = function(args) {
 //input: key for save game object
 handlers.loadMyProgress = function(args) {
 
-    response = {"message":"Unknown error"};
+    response = {};
 
+    var User = new cUser(currentPlayerId,"","");
+    User.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
+    if ( User.isInitedSuccessfully() )
+    {
+        response = { result:{success:true} };
+    }
+    else
+    {
+        response = getError(CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA, "Save or key not found");
+    }
+/*
     var currentProgress = server.GetUserData({
         PlayFabId: currentPlayerId,
         Keys: [CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]
@@ -521,17 +549,7 @@ handlers.loadMyProgress = function(args) {
 	var gameDataKeys = args.gamedatakeys;
     var data = currentProgress.Data[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
 	if (data) {
-		/*jsonarray = [];
-		for(var i = 0; i < data.length; i++) {
-			var obj = data[i];
-			for (var property in obj)
-			{
-				for(var j = 0; j < gameDataKeys.length; j++) {
-					if (gameDataKeys[j]==property)
-						jsonarray.push(data[i]);
-				}
-			}
-		}*/
+
 
 		response = { result:{} };
 		
@@ -570,7 +588,7 @@ handlers.loadMyProgress = function(args) {
 	else {
 	    response = getError(CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA, "Save or key not found");
 	}
-
+*/
 	return response;
 };
  

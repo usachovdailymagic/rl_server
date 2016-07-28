@@ -2,6 +2,7 @@
 var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
 var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
 var CONST_USE_SERVER_TIMESTAMPS_IN_SECONDS     			= true; //Cast server timestamp to seconds
+var CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS    = true; //Add server constants at loadMyProgress
 //----------------End Value constants---------------------
 
 //----------------Server keys constants---------------------
@@ -45,6 +46,13 @@ function getServerTimestamp() {
     }
 
     return time;
+}
+//------------------------------------------------------------------
+function getServerConstantsObject() {
+    var Constants = {};
+    Constants["giftInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
+
+    return Constants;
 }
 //------------------------------------------------------------------
 function getError(code, msg) {
@@ -560,7 +568,11 @@ handlers.loadMyProgress = function(args)
         response.result["overview"] = User.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
         response.result["gifts"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
         response.result["gift_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
-
+//      Add server constants to response
+        if ( CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS )
+        {
+            response.result["consts"] = getServerConstantsObject();
+        }
 //      Now lets reset new gifts and save it immediately in database
         if ( !leaveReceivedGifts  )
         {

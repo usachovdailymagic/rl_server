@@ -191,6 +191,15 @@ function cUser(playFabId, facebookId, uuid)
         this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP][friendFbId.toString()] = getServerTimestamp();
     }
 //--------------------------------------------
+    this.resetReceivedGifts = function(saveImmediately)
+    {
+        this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = [];
+        if ( saveImmediately )
+        {
+            this.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+        }
+    }
+//--------------------------------------------
 /*
 Calculates possibility of sending gift to a friend with a help of timestamp of previous sending
 returns bool value
@@ -534,7 +543,13 @@ handlers.loadMyProgress = function(args) {
     User.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
     if ( User.isInitedSuccessfully() )
     {
-        response = { result:{success:true} };
+        response = { result:{} };
+        response.result["progress"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
+        response.result["overview"] = User.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
+        response.result["gifts"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
+        response.result["gift_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
+//      Now lets reset new gifts and save it immediately in database
+        User.resetReceivedGifts(true);
     }
     else
     {

@@ -1,5 +1,6 @@
 //----------------Value constants---------------------
 var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
+var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
 //----------------End Value constants---------------------
 
 //----------------Server keys constants---------------------
@@ -32,28 +33,27 @@ function isArray(val) {
     return val instanceof Array; 
 }
 //------------------------------------------------------------------
-function getSeverTimestamp() {
+function getServerTimestamp() {
     var now = new Date();
     var time = now.getTime();
 
     return time;
 }
+//-----------------------------------------------------------------
 // Represents Gift class.
 function cGift(sender, networkType, itemType, amount, uid)
 {
-    constructor (sender, networkType, itemType, amount, uid)
-    {
-        this.mSender = sender;
-        this.mNetworkType = networkType;
-        this.mItemType = itemType;
-        this.mAmount = amount;
-        this.mId = uid;
+    this.mSender = sender;
+    this.mNetworkType = networkType;
+    this.mItemType = itemType;
+    this.mAmount = amount;
+    this.mId = uid;
 
-        if ( uid == -1 )
-        {
-            this.mId = GenerateId( this.mSender );
-        }
+    if ( uid == -1 )
+    {
+        this.mId = GenerateId( this.mSender );
     }
+
 //public
     this.GetSaveObject = function()
     {
@@ -66,7 +66,121 @@ function cGift(sender, networkType, itemType, amount, uid)
 //private
     function GenerateId( sender )
     {
-        var tmstmp = getSeverTimestamp();
+        var tmstmp = getServerTimestamp();
+        return (tmstmp.toString() + "_S_" + sender);
+    }
+}
+//-----------------------------------------------------------------
+/***************
+Represents User class.
+Contains part of logic, some things are in handler methods without use of cUser
+ **************/
+function cUser(playFabId, facebookId, uuid)
+{
+    this.mPlayFabId = playFabId;
+    this.mFacebookId = facebookId;
+    this.mUuid = uuid;
+    this.mDbFields = {};
+
+    this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS]				= [];
+    this.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW]				= {};
+    this.mDbFields[CONST_KEY_SERVER_FIELD_UUID]        					= "";
+    this.mDbFields[CONST_KEY_SERVER_FIELD_SCORE]        				= [];
+    this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]				= [];
+    this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]			= {};
+
+//public
+//--------------------------------------------
+    this.readDbFields = function(keys)
+    {
+        if ( isArray(keys) )
+        {
+            var Data = server.GetUserData({
+                PlayFabId: this.mPlayFabId,
+                Keys: keys
+            });
+
+            if ( isObject( Data ) && ( "Data" in Data ) )
+            {
+                var Len = keys.length;
+                for ( var i = 0; i < Len; ++i )
+                {
+                    var Key = keys[i];
+
+                    if ( ( Key in Data.Data ) && ( "Value" in Data.Data[Key] ) )
+                    {
+                        var ParseResult = Data.Data[Key].Value;
+                        if ( Key != "Uuid" )
+                        {
+                            ParseResult = JSON.parse(ParseResult);
+                        }
+                        this.mDbFields[Key] = ParseResult;
+                    }
+                }
+            }
+        }
+    }
+//--------------------------------------------
+    this.saveDbFields = function(keys)
+    {
+        if ( isArray(keys) )
+        {
+            var KeysToSave = {};
+
+            var Len = keys.length;
+            for ( var i = 0; i < Len; ++i )
+            {
+                var Key = keys[i];
+
+                if ( isObject(this.mDbFields[Key]) || isArray(this.mDbFields[Key]) )
+                {
+                    KeysToSave[Key] = JSON.stringify(this.mDbFields[Key]);
+                }
+                else
+                {
+                    KeysToSave[Key] = this.mDbFields[Key];
+                }
+            }
+
+            var resp = server.UpdateUserData({
+                PlayFabId: this.mPlayFabId,
+                Data: KeysToSave
+            });
+        }
+    }
+//--------------------------------------------
+    this.getGiftsCount = function()
+    {
+        if ( isArray(this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]) )
+        {
+            return this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED].length;
+        }
+
+        return 0;
+    }
+//--------------------------------------------
+    this.addNewGift = function(gift)
+    {
+        if ( !isArray(this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]) )
+        {
+            this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = [];
+        }
+        this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED].push(gift.GetSaveObject());
+    }
+//--------------------------------------------
+    this.recalcSendTimer = function(friendFbId)
+    {
+        if ( !isObject(this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]) )
+        {
+            this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] = {};
+        }
+        this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP][friendFbId.toString()] = getServerTimestamp();
+    }
+//--------------------------------------------
+//private
+    function GenerateId( sender )
+    {
+        var tmstmp = getServerTimestamp();
         return (tmstmp.toString() + "_S_" + sender);
     }
 }
@@ -88,7 +202,7 @@ function addNewGiftToExisting( gifts, new_gift ) {
 }
 
 handlers.getServerTime = function(args) {
-	var time = getSeverTimestamp();
+	var time = getServerTimestamp();
     return { serverTime: time };
 }
 
@@ -106,7 +220,6 @@ handlers.sendFriendGift = function(args) {
 
         var data = server.GetPlayFabIDsFromFacebookIDs({
             FacebookIDs: FriendsIds
-// 	FacebookIDs:["271802446516803","621807987996023"]
         });
 
         if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
@@ -117,37 +230,22 @@ handlers.sendFriendGift = function(args) {
             for (var i = 0; i < CountFriends; i++) {
                 if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
                 {
-                    var GiftsData = server.GetUserData({
-                        PlayFabId: ids[i]["PlayFabId"],
-                        Keys: [CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]
-                    });
-                    var AllGifts = [];
-                    GiftElement = {};
+                    var SenderUser = new cUser(currentPlayerId,"","");
+                    SenderUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
+//  TODO aleksey calc timestamp sending
+                    var FriendUser = new cUser(ids[i]["PlayFabId"],ids[i]["FacebookId"],"");
+                    FriendUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+                    FriendUser.addNewGift(IncomingGift);
+                    SenderUser.recalcSendTimer(FriendUser.mFacebookId);
+                    FriendUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+                    SenderUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
 
-                    if ( isObject( GiftsData )
-                        && ( "Data" in GiftsData )
-                        && ( CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED in GiftsData.Data )
-                        && ( "Value" in GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] ) )
-                    {
-                        AllGifts = JSON.parse(GiftsData.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED].Value);
-                    }
-
-                    AllGifts = addNewGiftToExisting(AllGifts,IncomingGift);
 // TODO aleksey remove debug info
                     GiftElement["TestInfoAboutFriendGifts"] = AllGifts;
                     result.push( GiftElement );
 
-//                  Save new gift data at friends field
-                    var UpdateGiftsData = {};
-                    UpdateGiftsData[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = JSON.stringify(AllGifts);
-
-                    var resp = server.UpdateUserData({
-                        PlayFabId: ids[i]["PlayFabId"],
-                        Data: UpdateGiftsData
-                    });
-
 // TODO aleksey get friends send gifts timers
-                    GiftElement[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] = [];
+                    GiftElement[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
                     GiftElement["GiftResult"] = true;
                 }
             };

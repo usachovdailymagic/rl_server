@@ -534,10 +534,16 @@ handlers.getShop = function(args) {
 };
  
 //load my progress, new version
-//input: key for save game object
-handlers.loadMyProgress = function(args) {
+//input: key for save game object, leaveGifts: possible bool var to leave received gifts(uses at login from facebook)
+handlers.loadMyProgress = function(args)
+{
+    var leaveReceivedGifts = false;
+    var response = {};
 
-    response = {};
+    if ( isObject(args) && ("leaveGifts" in args) )
+    {
+        leaveReceivedGifts  = args.leaveGifts;
+    }
 
     var User = new cUser(currentPlayerId,"","");
     User.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
@@ -548,62 +554,17 @@ handlers.loadMyProgress = function(args) {
         response.result["overview"] = User.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
         response.result["gifts"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
         response.result["gift_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
+
 //      Now lets reset new gifts and save it immediately in database
-        User.resetReceivedGifts(true);
+        if ( !leaveReceivedGifts  )
+        {
+            User.resetReceivedGifts(true);
+        }
     }
     else
     {
         response = getError(CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA, "Save or key not found");
     }
-/*
-    var currentProgress = server.GetUserData({
-        PlayFabId: currentPlayerId,
-        Keys: [CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]
-    });
-
-	var gameDataKeys = args.gamedatakeys;
-    var data = currentProgress.Data[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
-	if (data) {
-
-
-		response = { result:{} };
-		
-		if( "Value" in data ) {
-		    response.result["progress"] = JSON.parse(data.Value);
-		}
-		
-
-	    if( CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW in currentProgress.Data )
-	    {
-		    var overview = currentProgress.Data[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
-		    if ( overview && ( "Value" in overview ))
-		    {
-		    	response.result["overview"] = JSON.parse(overview.Value);
-		    }
-	    }
-
-        if( CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED in currentProgress.Data )
-        {
-            var gifts = currentProgress.Data[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
-            if ( gifts && ( "Value" in gifts ))
-            {
-                response.result["gifts"] = JSON.parse(gifts.Value);
-            }
-        }
-
-        if( CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP in currentProgress.Data )
-        {
-            var gift_timers = currentProgress.Data[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
-            if ( gift_timers && ( "Value" in gift_timers ))
-            {
-                response.result["gift_timers"] = JSON.parse(gift_timers.Value);
-            }
-        }
-	}
-	else {
-	    response = getError(CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA, "Save or key not found");
-	}
-*/
 	return response;
 };
  

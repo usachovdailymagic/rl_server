@@ -23,6 +23,7 @@ var CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 		            = 2001;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		            = 3001;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND	 	= 3002;
 var CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING            	 	= 3003;
+var CONST_ERROR_CODE_TOO_EARLY_TO_SEND_THIS_FRIEND            	 	= 3004;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -38,6 +39,10 @@ function getServerTimestamp() {
     var time = now.getTime();
 
     return time;
+}
+//------------------------------------------------------------------
+function getError(code, msg) {
+    return {code:code, msg: msg};
 }
 //-----------------------------------------------------------------
 // Represents Gift class.
@@ -177,13 +182,32 @@ function cUser(playFabId, facebookId, uuid)
         this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP][friendFbId.toString()] = getServerTimestamp();
     }
 //--------------------------------------------
-//private
-    function GenerateId( sender )
+/*
+Calculates possibility of sending gift to a friend with a help of timestamp of previous sending
+returns bool value
+ */
+    this.canSend = function(friendFbId)
     {
-        var tmstmp = getServerTimestamp();
-        return (tmstmp.toString() + "_S_" + sender);
+        if ( !isObject(this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]) )
+        {
+            this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] = {};
+            return true;
+        }
+        else
+        {
+            var CurTime = getServerTimestamp();
+            var TimeOfSending = this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP][friendFbId.toString()];
+            if ( ( CurTime - TimeOfSending ) > CONST_SEND_FRIEND_GIFT_TIME_INTERVAL )
+            {
+                return true;
+            }
+        }
+        return false;
     }
-}
+//--------------------------------------------
+//private methods
+
+}//End cUser
 
 //------------------------------------------------------------------
 // Adds new gift for existing. Params:
@@ -241,7 +265,8 @@ handlers.sendFriendGift = function(args) {
                     SenderUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
 
 // TODO aleksey remove debug info
-                    GiftElement["TestInfoAboutFriendGifts"] = AllGifts;
+                    GiftElement = {};
+                    GiftElement["TestInfoAboutFriendGifts"] = FriendUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
                     result.push( GiftElement );
 
 // TODO aleksey get friends send gifts timers
@@ -252,12 +277,12 @@ handlers.sendFriendGift = function(args) {
         }
         else
         {
-            result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND, msg: "Bad response at sendFriendGift"};
+            result = getError(CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND, "Bad response at sendFriendGift");
         }
     }
     else
     {
-        result = {code:CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING, msg: "Bad request data at sendFriendGift"};
+        result = getError(CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING, "Bad request data at sendFriendGift");
     }
 
     return {result: result};
@@ -308,7 +333,7 @@ handlers.getFriendsProgress = function(args) {
 	}
 	else
 	{
-		result = {code:CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND, msg: "Bad response at getFriendsProgress"};		
+		result = getError(CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND, "Bad response at getFriendsProgress");
 	}
 	
 	return {result: result};
@@ -335,7 +360,7 @@ handlers.getCustomId = function(args) {
 	}
 	else
 	{
-		result = {"message":"Uuid not found","code":CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID};	
+		result = getError(CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID, "Uuid not found");
 	}	
 
 	return result;
@@ -543,7 +568,7 @@ handlers.loadMyProgress = function(args) {
         }
 	}
 	else {
-	    response = {"message":"Save or key not found","code":CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA};
+	    response = getError(CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA, "Save or key not found");
 	}
 
 	return response;

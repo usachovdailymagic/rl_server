@@ -1,7 +1,7 @@
 //----------------Value constants---------------------
 var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
 //var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
-var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 20; //Time between gift sending to the same friend
+var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift sending to the same friend
 var CONST_USE_SERVER_TIMESTAMPS_IN_SECONDS     			= true; //Cast server timestamp to seconds
 var CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS    = true; //Add server constants at loadMyProgress
 //----------------End Value constants---------------------
@@ -297,24 +297,27 @@ handlers.sendFriendGift = function(args) {
                 {
                     var SenderUser = new cUser(currentPlayerId,"","");
                     SenderUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
-//  TODO aleksey calc timestamp sending
-                    var FriendUser = new cUser(ids[i]["PlayFabId"],ids[i]["FacebookId"],"");
-                    FriendUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
-                    FriendUser.addNewGift(IncomingGift);
-                    SenderUser.recalcSendTimer(FriendUser.mFacebookId);
-                    FriendUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
-                    SenderUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
+//                  Check timestamp previous sending
+                    if ( SenderUser.canSend(ids[i]["FacebookId"]) )
+                    {
+                        var FriendUser = new cUser(ids[i]["PlayFabId"],ids[i]["FacebookId"],"");
+                        FriendUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+                        FriendUser.addNewGift(IncomingGift);
+                        SenderUser.recalcSendTimer(FriendUser.mFacebookId);
+                        FriendUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+                        SenderUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
 
-// TODO aleksey remove debug info
-                    GiftElement = {};
-                    GiftElement["TestInfoAboutFriendGifts"] = FriendUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
-                    result.push( GiftElement );
-
-// TODO aleksey get friends send gifts timers
-                    GiftElement[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
-                    GiftElement["GiftResult"] = true;
+                        GiftElement = {};
+                        GiftElement["gift_timers"] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
+                        GiftElement["GiftResult"] = true;
+                        result.push( GiftElement );
+                    }
                 }
-            };
+                else
+                {
+                    result = getError(CONST_ERROR_CODE_TOO_EARLY_TO_SEND_THIS_FRIEND, "Too early to send at sendFriendGift");
+                }
+            }
         }
         else
         {

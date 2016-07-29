@@ -228,9 +228,16 @@ returns bool value
         }
         else
         {
-            var CurTime = getServerTimestamp();
-            var TimeOfSending = this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP][friendFbId.toString()];
-            if ( ( CurTime - TimeOfSending ) > CONST_SEND_FRIEND_GIFT_TIME_INTERVAL )
+            if ( friendFbId in this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP] )
+            {
+                var CurTime = getServerTimestamp();
+                var TimeOfSending = this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP][friendFbId.toString()];
+                if ( ( CurTime - TimeOfSending ) > CONST_SEND_FRIEND_GIFT_TIME_INTERVAL )
+                {
+                    return true;
+                }
+            }
+            else //Sending gift first time
             {
                 return true;
             }

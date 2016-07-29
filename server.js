@@ -312,10 +312,10 @@ handlers.sendFriendGift = function(args) {
                         GiftElement["GiftResult"] = true;
                         result.push( GiftElement );
                     }
-                }
-                else
-                {
-                    result = getError(CONST_ERROR_CODE_TOO_EARLY_TO_SEND_THIS_FRIEND, "Too early to send at sendFriendGift");
+                    else
+                    {
+                        result = getError(CONST_ERROR_CODE_TOO_EARLY_TO_SEND_THIS_FRIEND, "Too early to send at sendFriendGift");
+                    }
                 }
             }
         }

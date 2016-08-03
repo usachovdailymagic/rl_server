@@ -605,7 +605,8 @@ handlers.loadMyProgress = function(args)
 //      Now lets reset new gifts and save it immediately in database
         if ( !leaveReceivedGifts  )
         {
-            User.resetReceivedGifts(true);
+//            TODO aleksey uncomment this after testings
+//            User.resetReceivedGifts(true);
         }
     }
     else

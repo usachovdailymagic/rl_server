@@ -1,5 +1,6 @@
 //----------------Value constants---------------------
 var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
+var CONST_MAX_FRIENDS_COUNT_REQUEST_GIFT     			= 5; //Max friends count to ask for gift
 //var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
 var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift sending to the same friend
 var CONST_USE_SERVER_TIMESTAMPS_IN_SECONDS     			= true; //Cast server timestamp to seconds
@@ -52,6 +53,7 @@ function getServerTimestamp() {
 function getServerConstantsObject() {
     var Constants = {};
     Constants["giftInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
+    Constants["countfriendsrequest"] = CONST_MAX_FRIENDS_COUNT_REQUEST_GIFT;
 
     return Constants;
 }

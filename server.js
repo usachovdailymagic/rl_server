@@ -1,8 +1,10 @@
 //----------------Value constants---------------------
 var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
-var CONST_MAX_FRIENDS_COUNT_REQUEST_GIFT     			= 5; //Max friends count to ask for gift
+var CONST_MAX_FRIENDS_COUNT_ASK_GIFT     			    = 5; //Max friends count to ask for gift
 //var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
 var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift sending to the same friend
+var CONST_ASK_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift asking to the same friend
+var CONST_ANSWER_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between answering for gift request to the same friend
 var CONST_USE_SERVER_TIMESTAMPS_IN_SECONDS     			= true; //Cast server timestamp to seconds
 var CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS    = true; //Add server constants at loadMyProgress
 //----------------End Value constants---------------------
@@ -14,6 +16,8 @@ var CONST_KEY_SERVER_FIELD_UUID        					= "Uuid";
 var CONST_KEY_SERVER_FIELD_SCORE        				= "Score";
 var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED				= "GiftsReceived";
 var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
+var CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP			= "GiftsAskTime";
+var CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP		= "GiftsAnswerTime";
 //----------------End Server keys constants---------------------
 
 //----------------Errors---------------------
@@ -53,7 +57,9 @@ function getServerTimestamp() {
 function getServerConstantsObject() {
     var Constants = {};
     Constants["giftInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
-    Constants["countfriendsrequest"] = CONST_MAX_FRIENDS_COUNT_REQUEST_GIFT;
+    Constants["askInterval"] = CONST_ASK_FRIEND_GIFT_TIME_INTERVAL;
+    Constants["answerInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
+    Constants["countFriendsRequest"] = CONST_ANSWER_FRIEND_GIFT_TIME_INTERVAL;
 
     return Constants;
 }
@@ -111,6 +117,8 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_SCORE]        				= [];
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]				= [];
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]			= {};
+    this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]			= {};
+    this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP]		= {};
 //---private members---
     var mDbFieldsInitedSuccessfully = false;
 
@@ -573,7 +581,10 @@ handlers.loadMyProgress = function(args)
     }
 
     var User = new cUser(currentPlayerId,"","");
-    User.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED, CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]);
+    User.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED
+        , CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP
+        , CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP
+        , CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP]);
     if ( User.isInitedSuccessfully() )
     {
         response = { result:{} };
@@ -581,6 +592,8 @@ handlers.loadMyProgress = function(args)
         response.result["overview"] = User.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
         response.result["gifts"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
         response.result["gift_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
+        response.result["ask_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
+        response.result["answer_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP];
 //      Add server constants to response
         if ( CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS )
         {

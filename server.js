@@ -69,13 +69,14 @@ function getError(code, msg) {
 }
 //-----------------------------------------------------------------
 // Represents Gift class.
-function cGift(sender, networkType, itemType, amount, uid)
+function cGift(sender, networkType, itemType, amount, uid, giftType)
 {
     this.mSender = sender;
     this.mNetworkType = networkType;
     this.mItemType = itemType;
     this.mAmount = amount;
     this.mId = uid;
+    this.mGiftType = giftType;
 
     if ( uid == -1 )
     {
@@ -88,6 +89,7 @@ function cGift(sender, networkType, itemType, amount, uid)
         return {"sender":this.mSender
             , "networkType":this.mNetworkType
             , "itemType":this.mItemType
+            , "giftType":this.mGiftType
             , "amount":this.mAmount
             , "id": this.mId};
     }
@@ -294,8 +296,9 @@ handlers.sendFriendGift = function(args) {
     var result = [];
     if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
+        var GiftType = args["itemType"]; //Passing item type as gift type because it means resource gift without any other logic
         var FriendsIds = [];
-        var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1 );
+        var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1, GiftType );
         FriendsIds = [args["friendFbId"]];
 
 

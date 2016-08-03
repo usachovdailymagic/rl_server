@@ -58,8 +58,8 @@ function getServerConstantsObject() {
     var Constants = {};
     Constants["giftInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
     Constants["askInterval"] = CONST_ASK_FRIEND_GIFT_TIME_INTERVAL;
-    Constants["answerInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
-    Constants["countFriendsRequest"] = CONST_ANSWER_FRIEND_GIFT_TIME_INTERVAL;
+    Constants["answerInterval"] = CONST_ANSWER_FRIEND_GIFT_TIME_INTERVAL;
+    Constants["countFriendsToAsk"] = CONST_MAX_FRIENDS_COUNT_ASK_GIFT;
 
     return Constants;
 }

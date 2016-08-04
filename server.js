@@ -32,6 +32,9 @@ var CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING            	 	= 3003;
 var CONST_ERROR_CODE_TOO_EARLY_TO_SEND_THIS_FRIEND            	 	= 3004;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_NOT_FOUND	 	        = 3005;
 var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP            	 	            = 3006;
+var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_ASKING_NOT_FOUND	 	= 3007;
+var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP_ASKING            	 	    = 3008;
+var CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND            	 	= 3009;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -216,6 +219,15 @@ function cUser(playFabId, facebookId, uuid)
         this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP][friendFbId.toString()] = getServerTimestamp();
     }
 //--------------------------------------------
+    this.recalcAskTimer = function(friendFbId)
+    {
+        if ( !isObject(this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]) )
+        {
+            this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP] = {};
+        }
+        this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP][friendFbId.toString()] = getServerTimestamp();
+    }
+//--------------------------------------------
     this.resetReceivedGifts = function(saveImmediately)
     {
         this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED] = [];
@@ -350,13 +362,75 @@ handlers.sendFriendGift = function(args) {
     return {result: result};
 };
 
+//asking for help from friend
+//input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
+handlers.askHelpFriend = function(args) {
+    var result = [];
+    if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
+    {
+        var GiftType = "Help"; //Passing "Help" type as gift type because it means only help request
+        var FriendsIds = [];
+        var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1, GiftType );
+        FriendsIds = [args["friendFbId"]];
+
+
+
+        var data = server.GetPlayFabIDsFromFacebookIDs({
+            FacebookIDs: FriendsIds
+        });
+
+        if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
+        {
+            var ids = data["Data"];
+            var CountFriends = ids.length;
+
+            for (var i = 0; i < CountFriends; i++) {
+                if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
+                {
+                    var SenderUser = new cUser(currentPlayerId,"","");
+                    SenderUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]);
+//                  Check timestamp previous sending
+                    if ( SenderUser.canSend(ids[i]["FacebookId"]) )
+                    {
+                        var FriendUser = new cUser(ids[i]["PlayFabId"],ids[i]["FacebookId"],"");
+                        FriendUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+                        FriendUser.addNewGift(IncomingGift);
+                        SenderUser.recalcAskTimer(FriendUser.mFacebookId);
+                        FriendUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+                        SenderUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]);
+
+                        GiftElement = {};
+                        GiftElement["ask_timers"] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
+                        GiftElement["AskResult"] = true;
+                        result.push( GiftElement );
+                    }
+                    else
+                    {
+                        result = getError(CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND, "Too early to send at askHelpFriend");
+                    }
+                }
+            }
+        }
+        else
+        {
+            result = getError(CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_ASKING_NOT_FOUND, "Bad response at askHelpFriend");
+        }
+    }
+    else
+    {
+        result = getError(CONST_ERROR_CODE_BAD_PARAMS_AT_HELP_ASKING, "Bad request data at askHelpFriend");
+    }
+
+    return {result: result};
+};
+
 //help friend by sending gift
 //input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
 handlers.helpFriend = function(args) {
     var result = [];
     if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
-        var GiftType = "Help"; //Passing item type as gift type because it means resource gift without any other logic
+        var GiftType = args["itemType"]; //Passing item type as gift type because it means resource gift without any other logic
         var FriendsIds = [];
         var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1, GiftType );
         FriendsIds = [args["friendFbId"]];

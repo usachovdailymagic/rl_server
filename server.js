@@ -6,6 +6,10 @@ var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift sendin
 var CONST_ASK_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift asking to the same friend
 var CONST_USE_SERVER_TIMESTAMPS_IN_SECONDS     			= true; //Cast server timestamp to seconds
 var CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS    = true; //Add server constants at loadMyProgress
+var CONST_ASK_FRIEND_AMOUNT_ENERGY                      = 2; //Amount of resource asking for from friend
+var CONST_ASK_FRIEND_AMOUNT_GOLD                        = 2; //Amount of resource asking for from friend
+var CONST_ASK_FRIEND_AMOUNT_WOOD                        = 2; //Amount of resource asking for from friend
+var CONST_ASK_FRIEND_AMOUNT_STONE                       = 2; //Amount of resource asking for from friend
 //----------------End Value constants---------------------
 
 //----------------Server keys constants---------------------
@@ -62,6 +66,10 @@ function getServerConstantsObject() {
     Constants["giftInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
     Constants["askInterval"] = CONST_ASK_FRIEND_GIFT_TIME_INTERVAL;
     Constants["countFriendsToAsk"] = CONST_MAX_FRIENDS_COUNT_ASK_GIFT;
+    Constants["askVals"] = {"Energy":CONST_ASK_FRIEND_AMOUNT_ENERGY
+                            , "Gold":CONST_ASK_FRIEND_AMOUNT_GOLD
+                            , "Wood":CONST_ASK_FRIEND_AMOUNT_WOOD
+                            , "Stone":CONST_ASK_FRIEND_AMOUNT_STONE};
 
     return Constants;
 }

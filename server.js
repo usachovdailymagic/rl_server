@@ -4,7 +4,6 @@ var CONST_MAX_FRIENDS_COUNT_ASK_GIFT     			    = 5; //Max friends count to ask 
 //var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
 var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift sending to the same friend
 var CONST_ASK_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift asking to the same friend
-var CONST_ANSWER_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between answering for gift request to the same friend
 var CONST_USE_SERVER_TIMESTAMPS_IN_SECONDS     			= true; //Cast server timestamp to seconds
 var CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS    = true; //Add server constants at loadMyProgress
 //----------------End Value constants---------------------
@@ -17,7 +16,6 @@ var CONST_KEY_SERVER_FIELD_SCORE        				= "Score";
 var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED				= "GiftsReceived";
 var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
 var CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP			= "GiftsAskTime";
-var CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP		= "GiftsAnswerTime";
 //----------------End Server keys constants---------------------
 
 //----------------Errors---------------------
@@ -32,6 +30,8 @@ var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		            = 3001;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND	 	= 3002;
 var CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING            	 	= 3003;
 var CONST_ERROR_CODE_TOO_EARLY_TO_SEND_THIS_FRIEND            	 	= 3004;
+var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_NOT_FOUND	 	        = 3005;
+var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP            	 	            = 3006;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -58,7 +58,6 @@ function getServerConstantsObject() {
     var Constants = {};
     Constants["giftInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
     Constants["askInterval"] = CONST_ASK_FRIEND_GIFT_TIME_INTERVAL;
-    Constants["answerInterval"] = CONST_ANSWER_FRIEND_GIFT_TIME_INTERVAL;
     Constants["countFriendsToAsk"] = CONST_MAX_FRIENDS_COUNT_ASK_GIFT;
 
     return Constants;
@@ -120,7 +119,6 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]				= [];
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]			= {};
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]			= {};
-    this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP]		= {};
 //---private members---
     var mDbFieldsInitedSuccessfully = false;
 
@@ -347,6 +345,55 @@ handlers.sendFriendGift = function(args) {
     else
     {
         result = getError(CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING, "Bad request data at sendFriendGift");
+    }
+
+    return {result: result};
+};
+
+//help friend by sending gift
+//input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
+handlers.helpFriend = function(args) {
+    var result = [];
+    if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
+    {
+        var GiftType = "Help"; //Passing item type as gift type because it means resource gift without any other logic
+        var FriendsIds = [];
+        var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1, GiftType );
+        FriendsIds = [args["friendFbId"]];
+
+
+
+        var data = server.GetPlayFabIDsFromFacebookIDs({
+            FacebookIDs: FriendsIds
+        });
+
+        if ( isObject( data ) && ( "Data" in data ) && ( isArray( data["Data"] ) ) )
+        {
+            var ids = data["Data"];
+            var CountFriends = ids.length;
+
+            for (var i = 0; i < CountFriends; i++) {
+                if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
+                {
+                    var FriendUser = new cUser(ids[i]["PlayFabId"],ids[i]["FacebookId"],"");
+                    FriendUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+                    FriendUser.addNewGift(IncomingGift);
+                    FriendUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
+
+                    GiftElement = {};
+                    GiftElement["HelpResult"] = true;
+                    result.push( GiftElement );
+                }
+            }
+        }
+        else
+        {
+            result = getError(CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_NOT_FOUND, "Bad response at helpFriend");
+        }
+    }
+    else
+    {
+        result = getError(CONST_ERROR_CODE_BAD_PARAMS_AT_HELP, "Bad request data at helpFriend");
     }
 
     return {result: result};
@@ -587,7 +634,7 @@ handlers.loadMyProgress = function(args)
     User.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED
         , CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP
         , CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP
-        , CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP]);
+        ]);
     if ( User.isInitedSuccessfully() )
     {
         response = { result:{} };
@@ -596,7 +643,6 @@ handlers.loadMyProgress = function(args)
         response.result["gifts"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
         response.result["gift_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
         response.result["ask_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
-        response.result["answer_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ANSWER_TIMESTAMP];
 //      Add server constants to response
         if ( CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS )
         {

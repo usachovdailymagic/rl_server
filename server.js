@@ -237,10 +237,8 @@ function cUser(playFabId, facebookId, uuid)
         }
     }
 //--------------------------------------------
-/*
-Calculates possibility of sending gift to a friend with a help of timestamp of previous sending
-returns bool value
- */
+/* Calculates possibility of sending gift to a friend with a help of timestamp of previous sending
+returns bool value */
     this.canSend = function(friendFbId)
     {
         if ( !isObject(this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]) )
@@ -260,6 +258,34 @@ returns bool value
                 }
             }
             else //Sending gift first time
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+//--------------------------------------------
+/*  Calculates possibility of asking for help from a friend with a help of timestamp of previous asking
+returns bool value     */
+    this.canAsk = function(friendFbId)
+    {
+        if ( !isObject(this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]) )
+        {
+            this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP] = {};
+            return true;
+        }
+        else
+        {
+            if ( friendFbId in this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP] )
+            {
+                var CurTime = getServerTimestamp();
+                var TimeOfSending = this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP][friendFbId.toString()];
+                if ( ( CurTime - TimeOfSending ) > CONST_ASK_FRIEND_GIFT_TIME_INTERVAL )
+                {
+                    return true;
+                }
+            }
+            else //Asking gift first time
             {
                 return true;
             }
@@ -366,14 +392,11 @@ handlers.sendFriendGift = function(args) {
 //input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
 handlers.askHelpFriend = function(args) {
     var result = [];
-    if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
+    if ( isObject( args ) && ( "friendFbIds" in args ) && isArray(args["friendFbId"])  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         var GiftType = "Help"; //Passing "Help" type as gift type because it means only help request
-        var FriendsIds = [];
+        var FriendsIds = args["friendFbId"];
         var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1, GiftType );
-        FriendsIds = [args["friendFbId"]];
-
-
 
         var data = server.GetPlayFabIDsFromFacebookIDs({
             FacebookIDs: FriendsIds
@@ -383,26 +406,27 @@ handlers.askHelpFriend = function(args) {
         {
             var ids = data["Data"];
             var CountFriends = ids.length;
+            var CountIterations = Math.min( CountFriends, CONST_MAX_FRIENDS_COUNT_ASK_GIFT );
 
-            for (var i = 0; i < CountFriends; i++) {
+            var SenderUser = new cUser(currentPlayerId,"","");
+            SenderUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]);
+            var WasSuccessfullAsks = false;
+
+
+            for (var i = 0; i < CountIterations; i++) {
                 if ( isObject( ids[i] ) && ( "FacebookId" in ids[i] ) && ( "PlayFabId" in ids[i] ) )
                 {
-                    var SenderUser = new cUser(currentPlayerId,"","");
-                    SenderUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]);
+
 //                  Check timestamp previous sending
-                    if ( SenderUser.canSend(ids[i]["FacebookId"]) )
+                    if ( SenderUser.canAsk(ids[i]["FacebookId"]) )
                     {
                         var FriendUser = new cUser(ids[i]["PlayFabId"],ids[i]["FacebookId"],"");
                         FriendUser.readDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
                         FriendUser.addNewGift(IncomingGift);
                         SenderUser.recalcAskTimer(FriendUser.mFacebookId);
                         FriendUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]);
-                        SenderUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]);
-
-                        GiftElement = {};
-                        GiftElement["ask_timers"] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
-                        GiftElement["AskResult"] = true;
-                        result.push( GiftElement );
+                        // Flag to save sender data ONCE after all operations
+                        WasSuccessfullAsks = true;
                     }
                     else
                     {
@@ -410,6 +434,16 @@ handlers.askHelpFriend = function(args) {
                     }
                 }
             }
+            var GiftElement = {};
+
+            if ( WasSuccessfullAsks )
+            {
+                // Save info of sender
+                SenderUser.saveDbFields([CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]);
+                GiftElement["ask_timers"] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
+            }
+            GiftElement["AskResult"] = true;
+            result.push( GiftElement );
         }
         else
         {

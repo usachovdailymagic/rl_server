@@ -403,7 +403,7 @@ handlers.askHelpFriend = function(args) {
     if ( isObject( args ) && ( "friendFbIds" in args ) && isArray(args["friendFbIds"])  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         var GiftType = "Help"; //Passing "Help" type as gift type because it means only help request
-        var FriendsIds = args["friendFbId"];
+        var FriendsIds = args["friendFbIds"];
         var IncomingGift = new cGift( args["senderFbId"], args["networkType"], args["itemType"], args["count"], -1, GiftType );
 
         var data = server.GetPlayFabIDsFromFacebookIDs({

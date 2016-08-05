@@ -400,7 +400,7 @@ handlers.sendFriendGift = function(args) {
 //input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
 handlers.askHelpFriend = function(args) {
     var result = [];
-    if ( isObject( args ) && ( "friendFbIds" in args ) && isArray(args["friendFbId"])  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
+    if ( isObject( args ) && ( "friendFbIds" in args ) && isArray(args["friendFbIds"])  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         var GiftType = "Help"; //Passing "Help" type as gift type because it means only help request
         var FriendsIds = args["friendFbId"];

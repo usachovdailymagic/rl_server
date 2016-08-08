@@ -438,7 +438,7 @@ handlers.askHelpFriend = function(args) {
                     }
                     else
                     {
-                        result = getError(CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND, "Too early to send at askHelpFriend");
+                        //result = getError(CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND, "Too early to send at askHelpFriend");
                     }
                 }
             }

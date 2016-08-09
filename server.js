@@ -1,6 +1,6 @@
 //----------------Value constants---------------------
 var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
-var CONST_MAX_FRIENDS_COUNT_ASK_GIFT     			    = 4; //Max friends count to ask for gift
+var CONST_MAX_FRIENDS_COUNT_ASK_GIFT     			    = 2; //Max friends count to ask for gift
 //var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
 var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift sending to the same friend
 var CONST_ASK_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift asking to the same friend

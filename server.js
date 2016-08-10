@@ -337,7 +337,7 @@ handlers.getServerTime = function(args) {
 //sending gift to friend
 //input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
 handlers.sendFriendGift = function(args) {
-    var result = [];
+    var result = {};
     if ( isObject( args ) && ( "friendFbId" in args )  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         var GiftType = args["itemType"]; //Passing item type as gift type because it means resource gift without any other logic
@@ -374,7 +374,7 @@ handlers.sendFriendGift = function(args) {
                         GiftElement = {};
                         GiftElement["gift_timers"] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
                         GiftElement["GiftResult"] = true;
-                        result.push( GiftElement );
+                        result = GiftElement;
                     }
                     else
                     {
@@ -399,7 +399,7 @@ handlers.sendFriendGift = function(args) {
 //asking for help from friend
 //input: friendFbId, senderFbId, item - type of resource to gift, count - count of resources
 handlers.askHelpFriend = function(args) {
-    var result = [];
+    var result = {};
     if ( isObject( args ) && ( "friendFbIds" in args ) && isArray(args["friendFbIds"])  && ( "senderFbId" in args ) && ( "networkType" in args ) && ( "itemType" in args ) && ( "count" in args ) )
     {
         var GiftType = "Help"; //Passing "Help" type as gift type because it means only help request
@@ -451,7 +451,7 @@ handlers.askHelpFriend = function(args) {
                 GiftElement["ask_timers"] = SenderUser.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
             }
             GiftElement["AskResult"] = true;
-            result.push( GiftElement );
+            result = GiftElement;
         }
         else
         {

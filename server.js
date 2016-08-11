@@ -895,44 +895,44 @@ handlers.getPvpPlayers = function(args) {
 
 	if ( isObject( leaderboard ) && ( "Leaderboard" in leaderboard ) )
 	{
-		for (var i = 0; i < leaderboard.Leaderboard.length; i++) {
+		for (var i = 0; i < leaderboard.Leaderboard.length; i++)
+        {
 			var player = leaderboard.Leaderboard[i];
-			if (player.PlayFabId == currentPlayerId) {
+			if (player.PlayFabId == currentPlayerId)
+            {
+//              Request sender is not searching element, pass him
 				continue;
 			}
 
-			var currentProgress = server.GetUserData({
-			    PlayFabId: player.PlayFabId,
-				Keys: [CONST_KEY_SERVER_FIELD_GAME_PROGRESS]
-			});
+            var PvpPlayer = new cUser( player.PlayFabId, "", "" );
+            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS]);
+            if ( PvpPlayer.isInitedSuccessfully() )
+            {
+                var progress = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
 
-			var data = currentProgress.Data[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
+                var heroes = [];
 
-			var progress = {};
-			
-			if( "Value" in data ) {
-				progress = JSON.parse(data.Value);
-			}
+                if (progress)
+                {
+                    for (var j = 0; j < progress.length; j++)
+                    {
+                        var obj = progress[j];
+                        if ( ("creatures" in obj) )
+                        {
+                            if ("heroes" in obj.creatures)
+                            {
+                                heroes = obj.creatures.heroes;
+                            }
+                            break;
+                        }
+                    }
+                }
 
-			var heroes = [];
+                var playerRank = player["Position"] + 1;
 
-			if (progress) {
-				for (var j = 0; j < progress.length; j++)
-				{
-					var obj = progress[j];
-					if ( ("creatures" in obj) ) {
-						if ("heroes" in obj.creatures) {
-							heroes = obj.creatures.heroes;
-						}
-						break;
-					}
-				}
-			}
-
-			var playerRank = player["Position"] + 1;
-
-			var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes };
-			players.push(pl);
+                var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes };
+                players.push(pl);
+            }
 		}
 	}
 

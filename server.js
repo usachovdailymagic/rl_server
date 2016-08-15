@@ -999,6 +999,9 @@ handlers.getPvpPlayers = function(args) {
 
     var OwnerPlayer = new cUser( currentPlayerId, "", "" );
     var NameDataInfoMine = OwnerPlayer.getNamePresence();
+    var AccountInfo =  server.GetUserAccountInfo({
+        PlayFabId: currentPlayerId
+    });
 
-	return { result: { "players": players, "test_player": NameDataInfoMine } };
+	return { result: { "players": players, "test_player": NameDataInfoMine, "test_player2": AccountInfo } };
 }

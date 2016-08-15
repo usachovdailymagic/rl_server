@@ -48,6 +48,11 @@ function isObject(val) {
 function isArray(val) {
     return val instanceof Array; 
 }
+
+//------------------------------------------------------------------
+function isString(val) {
+    return val instanceof String;
+}
 //------------------------------------------------------------------
 function getServerTimestamp() {
     var now = new Date();
@@ -132,6 +137,7 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]			= {};
 //---private members---
     var mDbFieldsInitedSuccessfully = false;
+    var mCombinedInfoInitedSuccessfully = false;
 
 //---public methods---
 //--------------------------------------------
@@ -207,6 +213,53 @@ function cUser(playFabId, facebookId, uuid)
         }
 
         return 0;
+    }
+//--------------------------------------------
+/******
+Get detailed account info with a help of server api. FbId GoogleId GCid...
+ ******/
+    this.getCombinedInfo = function()
+    {
+        var CombinedInfo =  server.GetPlayerCombinedInfo({
+            PlayFabId: this.mPlayFabId,
+            GetUserAccountInfo: true
+        });
+
+        if ( isObject(CombinedInfo) && "data" in CombinedInfo && "InfoResultPayload" in CombinedInfo.data )
+        {
+            // Checking facebook linkage
+            if ( isObject(CombinedInfo.data.InfoResultPayload)
+                && "FacebookInfo" in CombinedInfo.data.InfoResultPayload
+                && isObject(CombinedInfo.data.InfoResultPayload.FacebookInfo)
+                && "FacebookId" in CombinedInfo.data.InfoResultPayload.FacebookInfo
+                )
+            {
+                this.mFacebookId = CombinedInfo.data.InfoResultPayload.FacebookInfo.FacebookId;
+            }
+        }
+        SetCombinedInfoInited(true);
+    }
+//--------------------------------------------
+/******
+If there is FbId GoogleId GCid linkage - says its Id, in the other way advises to generate name...
+******/
+    this.getNamePresence = function()
+    {
+        var KEY_NEED_GENERATION = "need_generation";
+        var RetObject = {};
+        if ( !mCombinedInfoInitedSuccessfully )
+        {
+            this.getCombinedInfo();
+        }
+
+        RetObject[KEY_NEED_GENERATION] = true;
+        if ( isString(this.mFacebookId) && this.mFacebookId.length > 0 )
+        {
+            RetObject["fbid"] = this.mFacebookId;
+            RetObject[KEY_NEED_GENERATION] = false;
+        }
+
+        return RetObject;
     }
 //--------------------------------------------
     this.addNewGift = function(gift)
@@ -310,6 +363,10 @@ returns bool value     */
     function SetDbInited(success)
     {
         mDbFieldsInitedSuccessfully = success;
+    }
+    function SetCombinedInfoInited(success)
+    {
+        mCombinedInfoInitedSuccessfully = success;
     }
 }//End cUser
 
@@ -884,12 +941,12 @@ handlers.updatePlayerStats = function(args) {
 }
 
 handlers.getPvpPlayers = function(args) {
-	var leaderboard =  server.GetLeaderboardAroundUser({
-		StatisticName: "PvP Raiting",
-		PlayFabId: currentPlayerId,
-		MaxResultsCount: 4
-	});
 
+    var leaderboard =  server.GetLeaderboardAroundUser({
+        StatisticName: "PvP Raiting",
+        PlayFabId: currentPlayerId,
+        MaxResultsCount: 4
+    });
 
 	var players = [];
 
@@ -930,7 +987,7 @@ handlers.getPvpPlayers = function(args) {
 
                 var playerRank = player["Position"] + 1;
 
-                var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes };
+                var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes, name_info: PvpPlayer.getNamePresence() };
                 players.push(pl);
             }
 		}

@@ -257,7 +257,7 @@ If there is FbId GoogleId GCid linkage - says its Id, in the other way advises t
         }
 
         RetObject[KEY_NEED_GENERATION] = true;
-        if ( isString(this.mFacebookId) && this.mFacebookId.length > 0 )
+        if ( this.mFacebookId )
         {
             RetObject["fbinfo"] = this.mFacebookInfo;
             RetObject[KEY_NEED_GENERATION] = false;

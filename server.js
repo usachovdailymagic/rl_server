@@ -222,12 +222,14 @@ Get detailed account info with a help of server api. FbId ...
  ******/
     this.getUserAccountInfo = function()
     {
+        log.info("this.getUserAccountInfo  1");
         var AccountInfo =  server.GetUserAccountInfo({
             PlayFabId: this.mPlayFabId
         });
-
+        log.info("this.getUserAccountInfo  2");
         if ( isObject(AccountInfo) && "data" in AccountInfo && "UserInfo" in AccountInfo.data )
         {
+            log.info("this.getUserAccountInfo  3");
             // Checking facebook linkage
             if ( isObject(AccountInfo.data.UserInfo)
                 && "FacebookInfo" in AccountInfo.data.UserInfo
@@ -236,12 +238,15 @@ Get detailed account info with a help of server api. FbId ...
                 && "FullName" in AccountInfo.data.UserInfo.FacebookInfo
                 )
             {
+                log.info("this.getUserAccountInfo  4");
                 this.mFacebookId = AccountInfo.data.UserInfo.FacebookInfo.FacebookId;
                 this.mFullname = AccountInfo.data.UserInfo.FacebookInfo.FullName;
                 this.mFacebookInfo = AccountInfo.data.UserInfo.FacebookInfo;
             }
         }
+        log.info("this.getUserAccountInfo  5");
         SetUserAccountInfoInited(true);
+        log.info("this.getUserAccountInfo  55");
     }
 //--------------------------------------------
 /******
@@ -251,18 +256,22 @@ If there is FbId GoogleId GCid linkage - says its Id, in the other way advises t
     {
         var KEY_NEED_GENERATION = "need_generation";
         var RetObject = {};
+        log.info("this.getNamePresence  1");
         if ( !mUserAccountInfoInitedSuccessfully )
         {
+            log.info("this.getNamePresence  2");
             this.getUserAccountInfo();
+            log.info("this.getNamePresence  3");
         }
 
         RetObject[KEY_NEED_GENERATION] = true;
         if ( this.mFacebookId )
         {
+            log.info("this.getNamePresence  4");
             RetObject["fbinfo"] = this.mFacebookInfo;
             RetObject[KEY_NEED_GENERATION] = false;
         }
-
+        log.info("this.getNamePresence  5");
         return RetObject;
     }
 //--------------------------------------------

@@ -227,21 +227,21 @@ Get detailed account info with a help of server api. FbId ...
             PlayFabId: this.mPlayFabId
         });
         log.info("this.getUserAccountInfo  2");
-        if ( isObject(AccountInfo) && "data" in AccountInfo && "UserInfo" in AccountInfo.data )
+        if ( isObject(AccountInfo) && "UserInfo" in AccountInfo )
         {
             log.info("this.getUserAccountInfo  3");
             // Checking facebook linkage
-            if ( isObject(AccountInfo.data.UserInfo)
-                && "FacebookInfo" in AccountInfo.data.UserInfo
-                && isObject(AccountInfo.data.UserInfo.FacebookInfo)
-                && "FacebookId" in AccountInfo.data.UserInfo.FacebookInfo
-                && "FullName" in AccountInfo.data.UserInfo.FacebookInfo
+            if ( isObject(AccountInfo.UserInfo)
+                && "FacebookInfo" in AccountInfo.UserInfo
+                && isObject(AccountInfo.UserInfo.FacebookInfo)
+                && "FacebookId" in AccountInfo.UserInfo.FacebookInfo
+                && "FullName" in AccountInfo.UserInfo.FacebookInfo
                 )
             {
                 log.info("this.getUserAccountInfo  4");
-                this.mFacebookId = AccountInfo.data.UserInfo.FacebookInfo.FacebookId;
-                this.mFullname = AccountInfo.data.UserInfo.FacebookInfo.FullName;
-                this.mFacebookInfo = AccountInfo.data.UserInfo.FacebookInfo;
+                this.mFacebookId = AccountInfo.UserInfo.FacebookInfo.FacebookId;
+                this.mFullname = AccountInfo.UserInfo.FacebookInfo.FullName;
+                this.mFacebookInfo = AccountInfo.UserInfo.FacebookInfo;
             }
         }
         log.info("this.getUserAccountInfo  5");

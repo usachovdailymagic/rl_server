@@ -943,6 +943,25 @@ handlers.updatePlayerStats = function(args) {
 
 handlers.getPvpPlayers = function(args) {
 
+    var testVar =  server.GetPlayerCombinedInfo({
+        PlayFabId: currentPlayerId,
+        "InfoRequestParameters": {
+            "GetUserAccountInfo": true,
+            "GetUserInventory": false,
+            "GetUserVirtualCurrency": true,
+            "GetUserData": true,
+            "UserDataKeys": [
+                "preferences",
+                "progress"
+            ],
+            "GetUserReadOnlyData": false,
+            "GetCharacterInventories": false,
+            "GetCharacterList": false,
+            "GetTitleData": false,
+            "GetPlayerStatistics": false
+        }
+    });
+
     var leaderboard =  server.GetLeaderboardAroundUser({
         StatisticName: "PvP Raiting",
         PlayFabId: currentPlayerId,
@@ -988,7 +1007,7 @@ handlers.getPvpPlayers = function(args) {
 
                 var playerRank = player["Position"] + 1;
 
-                var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes, name_info: PvpPlayer.getNamePresence() };
+                var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes/*, name_info: PvpPlayer.getNamePresence()*/ };
                 players.push(pl);
             }
 		}

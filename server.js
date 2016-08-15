@@ -222,7 +222,8 @@ Get detailed account info with a help of server api. FbId GoogleId GCid...
     {
         var CombinedInfo =  server.GetPlayerCombinedInfo({
             PlayFabId: this.mPlayFabId,
-            GetUserAccountInfo: true
+            InfoRequestParameters:{
+            GetUserAccountInfo: true}
         });
 
         if ( isObject(CombinedInfo) && "data" in CombinedInfo && "InfoResultPayload" in CombinedInfo.data )

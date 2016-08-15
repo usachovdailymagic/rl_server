@@ -997,5 +997,8 @@ handlers.getPvpPlayers = function(args) {
 		}
 	}
 
-	return { result: { "players": players } };
+    var OwnerPlayer = new cUser( currentPlayerId, "", "" );
+    var NameDataInfoMine = OwnerPlayer.getNamePresence();
+
+	return { result: { "players": players, "test_player": NameDataInfoMine } };
 }

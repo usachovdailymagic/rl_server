@@ -125,6 +125,8 @@ function cUser(playFabId, facebookId, uuid)
 //---public members---
     this.mPlayFabId = playFabId;
     this.mFacebookId = facebookId;
+    this.mFacebookInfo = {};
+    this.mFullname = "";
     this.mUuid = uuid;
     this.mDbFields = {};
 
@@ -137,7 +139,7 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]			= {};
 //---private members---
     var mDbFieldsInitedSuccessfully = false;
-    var mCombinedInfoInitedSuccessfully = false;
+    var mUserAccountInfoInitedSuccessfully = false;
 
 //---public methods---
 //--------------------------------------------
@@ -216,29 +218,30 @@ function cUser(playFabId, facebookId, uuid)
     }
 //--------------------------------------------
 /******
-Get detailed account info with a help of server api. FbId GoogleId GCid...
+Get detailed account info with a help of server api. FbId ...
  ******/
-    this.getCombinedInfo = function()
+    this.getUserAccountInfo = function()
     {
-        var CombinedInfo =  server.GetPlayerCombinedInfo({
-            PlayFabId: this.mPlayFabId,
-            InfoRequestParameters:{
-            GetUserAccountInfo: true}
+        var AccountInfo =  server.GetUserAccountInfo({
+            PlayFabId: this.mPlayFabId
         });
 
-        if ( isObject(CombinedInfo) && "data" in CombinedInfo && "InfoResultPayload" in CombinedInfo.data )
+        if ( isObject(AccountInfo) && "data" in AccountInfo && "UserInfo" in AccountInfo.data )
         {
             // Checking facebook linkage
-            if ( isObject(CombinedInfo.data.InfoResultPayload)
-                && "FacebookInfo" in CombinedInfo.data.InfoResultPayload
-                && isObject(CombinedInfo.data.InfoResultPayload.FacebookInfo)
-                && "FacebookId" in CombinedInfo.data.InfoResultPayload.FacebookInfo
+            if ( isObject(AccountInfo.data.UserInfo)
+                && "FacebookInfo" in AccountInfo.data.UserInfo
+                && isObject(AccountInfo.data.UserInfo.FacebookInfo)
+                && "FacebookId" in AccountInfo.data.UserInfo.FacebookInfo
+                && "FullName" in AccountInfo.data.UserInfo.FacebookInfo
                 )
             {
-                this.mFacebookId = CombinedInfo.data.InfoResultPayload.FacebookInfo.FacebookId;
+                this.mFacebookId = AccountInfo.data.UserInfo.FacebookInfo.FacebookId;
+                this.mFullname = AccountInfo.data.UserInfo.FacebookInfo.FullName;
+                this.mFacebookInfo = AccountInfo.data.UserInfo.FacebookInfo;
             }
         }
-        SetCombinedInfoInited(true);
+        SetUserAccountInfoInited(true);
     }
 //--------------------------------------------
 /******
@@ -248,15 +251,15 @@ If there is FbId GoogleId GCid linkage - says its Id, in the other way advises t
     {
         var KEY_NEED_GENERATION = "need_generation";
         var RetObject = {};
-        if ( !mCombinedInfoInitedSuccessfully )
+        if ( !mUserAccountInfoInitedSuccessfully )
         {
-            this.getCombinedInfo();
+            this.getUserAccountInfo();
         }
 
         RetObject[KEY_NEED_GENERATION] = true;
         if ( isString(this.mFacebookId) && this.mFacebookId.length > 0 )
         {
-            RetObject["fbid"] = this.mFacebookId;
+            RetObject["fbinfo"] = this.mFacebookInfo;
             RetObject[KEY_NEED_GENERATION] = false;
         }
 
@@ -365,9 +368,9 @@ returns bool value     */
     {
         mDbFieldsInitedSuccessfully = success;
     }
-    function SetCombinedInfoInited(success)
+    function SetUserAccountInfoInited(success)
     {
-        mCombinedInfoInitedSuccessfully = success;
+        mUserAccountInfoInitedSuccessfully = success;
     }
 }//End cUser
 
@@ -1006,8 +1009,8 @@ handlers.getPvpPlayers = function(args) {
                 }
 
                 var playerRank = player["Position"] + 1;
-
-                var pl = { name: player["DisplayName"], rank: playerRank, rate: player["StatValue"], heroes: heroes/*, name_info: PvpPlayer.getNamePresence()*/ };
+                var NameDataInfo = PvpPlayer.getNamePresence();
+                var pl = { name: PvpPlayer.mFullname/*player["DisplayName"]*/, rank: playerRank, rate: player["StatValue"], heroes: heroes, name_info: NameDataInfo };
                 players.push(pl);
             }
 		}

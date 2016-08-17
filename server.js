@@ -963,6 +963,19 @@ handlers.getPvpPlayers = function(args) {
 				continue;
 			}
 
+//-- START TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
+            if ( i == 0 )
+            {
+                var PossiblePlayers = ["8CCDCAAB7DEC6F8","3EDB58C3E81D6362"];
+                var SelectedId = PossiblePlayers[0];
+                if ( currentPlayerId == PossiblePlayers[0] )
+                {
+                    SelectedId = PossiblePlayers[1];
+                }
+                player.PlayFabId = SelectedId;
+            }
+//-- END TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
+
             var PvpPlayer = new cUser( player.PlayFabId, "", "" );
             PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS]);
             if ( PvpPlayer.isInitedSuccessfully() )
@@ -994,17 +1007,7 @@ handlers.getPvpPlayers = function(args) {
             }
 		}
 	}
-//-- START TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
-    var PossiblePlayers = ["8CCDCAAB7DEC6F8","3EDB58C3E81D6362"];
-    var Player1 = players[0];
-    var SelectedId = PossiblePlayers[0];
-    if ( currentPlayerId == PossiblePlayers[0] )
-    {
-        SelectedId = PossiblePlayers[1];
-    }
-    Player1.playfabid = SelectedId;
-    players[0] = Player1;
-//-- END TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
+
     var OwnerPlayer = new cUser( currentPlayerId, "", "" );
     var NameDataInfoMine = OwnerPlayer.getNamePresence();
 

@@ -989,7 +989,7 @@ handlers.getPvpPlayers = function(args) {
 
                 var playerRank = player["Position"] + 1;
                 var NameDataInfo = PvpPlayer.getNamePresence();
-                var pl = { name: PvpPlayer.mFullname/*player["DisplayName"]*/, rank: playerRank, rate: player["StatValue"], heroes: heroes, name_info: NameDataInfo };
+                var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname/*player["DisplayName"]*/, rank: playerRank, rate: player["StatValue"], heroes: heroes, name_info: NameDataInfo };
                 players.push(pl);
             }
 		}

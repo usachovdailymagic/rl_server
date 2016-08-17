@@ -998,5 +998,5 @@ handlers.getPvpPlayers = function(args) {
     var OwnerPlayer = new cUser( currentPlayerId, "", "" );
     var NameDataInfoMine = OwnerPlayer.getNamePresence();
 
-	return { result: { "players": players, "test_player": NameDataInfoMine } };
+	return { result: { "players": players, "test_player": NameDataInfoMine, "leaderboard":leaderboard } };
 }

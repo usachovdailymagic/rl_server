@@ -20,6 +20,7 @@ var CONST_KEY_SERVER_FIELD_SCORE        				= "Score";
 var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED				= "GiftsReceived";
 var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
 var CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP			= "GiftsAskTime";
+var CONST_KEY_SERVER_FIELD_GAME_CENTER_ID   			= "GameCenterId";
 //----------------End Server keys constants---------------------
 
 //----------------Errors---------------------
@@ -137,6 +138,7 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED]				= [];
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]			= {};
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]			= {};
+    this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]				= "";
 //---private members---
     var mDbFieldsInitedSuccessfully = false;
     var mUserAccountInfoInitedSuccessfully = false;
@@ -809,6 +811,7 @@ handlers.loadMyProgress = function(args)
     User.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW, CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED
         , CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP
         , CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP
+        , CONST_KEY_SERVER_FIELD_GAME_CENTER_ID
         ]);
     if ( User.isInitedSuccessfully() )
     {
@@ -818,6 +821,7 @@ handlers.loadMyProgress = function(args)
         response.result["gifts"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED];
         response.result["gift_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
         response.result["ask_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
+        response.result["gc_id"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID];
 //      Add server constants to response
         if ( CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS )
         {

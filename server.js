@@ -40,6 +40,7 @@ var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP            	 	            = 3006;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_ASKING_NOT_FOUND	 	= 3007;
 var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP_ASKING            	 	    = 3008;
 var CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND            	 	= 3009;
+var CONST_ERROR_CODE_GC_LINK_BAD_PARAMS                     	 	= 3010;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -358,6 +359,15 @@ returns bool value     */
         return false;
     }
 //--------------------------------------------
+    this.setGameCenterId = function(gc_id, saveImmediately)
+    {
+        this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID] = gc_id;
+        if ( saveImmediately )
+        {
+            this.saveDbFields([CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]);
+        }
+    }
+//--------------------------------------------
     this.isInitedSuccessfully = function()
     {
         return mDbFieldsInitedSuccessfully;
@@ -627,6 +637,22 @@ handlers.getFriendsProgress = function(args) {
 	return {result: result};
 };
 
+// saves Game Center Id for player. Uses only for IOS client version
+//input: GCId - Game Center Id string
+handlers.linkGameCenterManually = function(args) {
+    if ( isObject(args) && "GCId" in args )
+    {
+        var User = new cUser( currentPlayerId, "" , "" );
+        User.setGameCenterId( args["GCId"], true ); // Setting new Id and save it immediately
+        result = {isSuccess:true};
+    }
+    else
+    {
+        result = getError(CONST_ERROR_CODE_GC_LINK_BAD_PARAMS , "Bad params");
+    }
+
+    return result;
+}
 //get custom id. Which means our uuid of app on the device
 //input: isFbAcc - means from what auth scheme asking for a Uuid. Needed in client, just resendind it back for now.
 handlers.getCustomId = function(args) {

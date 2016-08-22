@@ -167,7 +167,7 @@ function cUser(playFabId, facebookId, uuid)
                     if ( ( Key in Data.Data ) && ( "Value" in Data.Data[Key] ) )
                     {
                         var ParseResult = Data.Data[Key].Value;
-                        if ( Key != "Uuid" )
+                        if ( Key != CONST_KEY_SERVER_FIELD_UUID && Key != CONST_KEY_SERVER_FIELD_GAME_CENTER_ID )
                         {
                             ParseResult = JSON.parse(ParseResult);
                         }

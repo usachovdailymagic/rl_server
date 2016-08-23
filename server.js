@@ -996,7 +996,7 @@ handlers.getPvpPlayers = function(args) {
 //-- START TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
             if ( i == 0 )
             {
-                var PossiblePlayers = ["8CCDCAAB7DEC6F8","3EDB58C3E81D6362"];
+                var PossiblePlayers = ["714C003E1ABF156","8CCDCAAB7DEC6F8","3EDB58C3E81D6362"];
                 var SelectedId = PossiblePlayers[0];
                 if ( currentPlayerId == PossiblePlayers[0] )
                 {
@@ -1007,10 +1007,11 @@ handlers.getPvpPlayers = function(args) {
 //-- END TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
 
             var PvpPlayer = new cUser( player.PlayFabId, "", "" );
-            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS]);
+            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]);
             if ( PvpPlayer.isInitedSuccessfully() )
             {
                 var progress = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
+                var GameCenterId = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID];
 
                 var heroes = [];
 
@@ -1032,7 +1033,9 @@ handlers.getPvpPlayers = function(args) {
 
                 var playerRank = player["Position"] + 1;
                 var NameDataInfo = PvpPlayer.getNamePresence();
-                var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname/*player["DisplayName"]*/, rank: playerRank, rate: player["StatValue"], heroes: heroes, name_info: NameDataInfo };
+                var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname/*player["DisplayName"]*/
+                    , rank: playerRank , rate: player["StatValue"]
+                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId };
                 players.push(pl);
             }
 		}

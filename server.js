@@ -1,6 +1,7 @@
 //----------------Value constants---------------------
 var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 5; //Max friend's scores to receive per one request
 var CONST_MAX_FRIENDS_COUNT_ASK_GIFT     			    = 2; //Max friends count to ask for gift
+var CONST_MAX_PLAYERS_COUNT_GET_PVP_INFO  			    = 4; //Max pvp players get detailed info per one request
 //var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend
 var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift sending to the same friend
 var CONST_ASK_FRIEND_GIFT_TIME_INTERVAL     			= 45; //Time between gift asking to the same friend
@@ -73,6 +74,7 @@ function getServerConstantsObject() {
     Constants["giftInterval"] = CONST_SEND_FRIEND_GIFT_TIME_INTERVAL;
     Constants["askInterval"] = CONST_ASK_FRIEND_GIFT_TIME_INTERVAL;
     Constants["countFriendsToAsk"] = CONST_MAX_FRIENDS_COUNT_ASK_GIFT;
+    Constants["countPvpGetInfo"] = CONST_MAX_PLAYERS_COUNT_GET_PVP_INFO;
     Constants["askVals"] = {"Energy":CONST_ASK_FRIEND_AMOUNT_ENERGY
                             , "Gold":CONST_ASK_FRIEND_AMOUNT_GOLD
                             , "Wood":CONST_ASK_FRIEND_AMOUNT_WOOD
@@ -1041,8 +1043,55 @@ handlers.getPvpPlayers = function(args) {
 		}
 	}
 
-    var OwnerPlayer = new cUser( currentPlayerId, "", "" );
-    var NameDataInfoMine = OwnerPlayer.getNamePresence();
+	return { result: { "players": players } };
+}
 
-	return { result: { "players": players, "test_player": NameDataInfoMine, "leaderboard":leaderboard } };
+/*
+* Get Pvp player Info.
+* Input - array of playfabIds
+*/
+handlers.getPvpPlayerInfo = function(args) {
+
+    var players = [];
+
+    if ( isObject( args ) && ( "players" in args ) && isArray( args.players ) )
+    {
+        var InputPlayers = args.players;
+        for (var i = 0; i < InputPlayers.length; i++)
+        {
+
+            var PvpPlayer = new cUser( InputPlayers[i], "", "" );
+            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]);
+            if ( PvpPlayer.isInitedSuccessfully() )
+            {
+                var progress = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
+                var GameCenterId = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID];
+
+                var heroes = [];
+
+                if (progress)
+                {
+                    for (var j = 0; j < progress.length; j++)
+                    {
+                        var obj = progress[j];
+                        if ( ("creatures" in obj) )
+                        {
+                            if ("heroes" in obj.creatures)
+                            {
+                                heroes = obj.creatures.heroes;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                var NameDataInfo = PvpPlayer.getNamePresence();
+                var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname
+                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId };
+                players.push(pl);
+            }
+        }
+    }
+
+    return { result: { "players": players } };
 }

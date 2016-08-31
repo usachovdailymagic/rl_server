@@ -22,6 +22,7 @@ var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED				= "GiftsReceived";
 var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
 var CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP			= "GiftsAskTime";
 var CONST_KEY_SERVER_FIELD_GAME_CENTER_ID   			= "GameCenterId";
+var CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA   			= "GooglePlusData";
 //----------------End Server keys constants---------------------
 
 //----------------Errors---------------------
@@ -42,6 +43,7 @@ var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_ASKING_NOT_FOUND	 	= 3007;
 var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP_ASKING            	 	    = 3008;
 var CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND            	 	= 3009;
 var CONST_ERROR_CODE_GC_LINK_BAD_PARAMS                     	 	= 3010;
+var CONST_ERROR_CODE_GOOGLE_LINK_BAD_PARAMS                         = 3011;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -142,6 +144,7 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP]			= {};
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]			= {};
     this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]				= "";
+    this.mDbFields[CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA]				= {};
 //---private members---
     var mDbFieldsInitedSuccessfully = false;
     var mUserAccountInfoInitedSuccessfully = false;
@@ -367,6 +370,16 @@ returns bool value     */
         if ( saveImmediately )
         {
             this.saveDbFields([CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]);
+        }
+    }
+//--------------------------------------------
+    this.setGooglePlusData = function(gplus_id, fullname, photo_url, saveImmediately)
+    {
+        this.mDbFields[CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA] = {"gplus_id":gplus_id,
+        "fullname": fullname, "photo_url": photo_url};
+        if ( saveImmediately )
+        {
+            this.saveDbFields([CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA]);
         }
     }
 //--------------------------------------------
@@ -655,6 +668,26 @@ handlers.linkGameCenterManually = function(args) {
 
     return result;
 }
+
+// saves Google plus Id, fullname, photo_url for player. Uses only for Android client version
+//input: GPId - Google Plis Id string
+// Fullname - Fullname of player string
+// PhotoUrl - string
+handlers.linkGooglePlusManually = function(args) {
+    if ( isObject(args) && "GPId" in args && "Fullname" in args && "PhotoUrl" in args )
+    {
+        var User = new cUser( currentPlayerId, "" , "" );
+        User.setGooglePlusData( args["GCId"], args["Fullname"], args["PhotoUrl"], true ); // Setting new Id and save it immediately
+        result = {isSuccess:true};
+    }
+    else
+    {
+        result = getError(CONST_ERROR_CODE_GOOGLE_LINK_BAD_PARAMS , "Bad params");
+    }
+
+    return result;
+}
+
 //get custom id. Which means our uuid of app on the device
 //input: isFbAcc - means from what auth scheme asking for a Uuid. Needed in client, just resendind it back for now.
 handlers.getCustomId = function(args) {
@@ -840,6 +873,7 @@ handlers.loadMyProgress = function(args)
         , CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP
         , CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP
         , CONST_KEY_SERVER_FIELD_GAME_CENTER_ID
+        , CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA
         ]);
     if ( User.isInitedSuccessfully() )
     {
@@ -850,6 +884,7 @@ handlers.loadMyProgress = function(args)
         response.result["gift_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP];
         response.result["ask_timers"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP];
         response.result["gc_id"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID];
+        response.result["gplus"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA];
 //      Add server constants to response
         if ( CONST_ADD_CONSTANTS_TO_RESPONSE_AT_LOAD_PROGRESS )
         {
@@ -1009,11 +1044,12 @@ handlers.getPvpPlayers = function(args) {
 //-- END TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
 
             var PvpPlayer = new cUser( player.PlayFabId, "", "" );
-            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]);
+            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_GAME_CENTER_ID, CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA]);
             if ( PvpPlayer.isInitedSuccessfully() )
             {
                 var progress = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
                 var GameCenterId = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID];
+                var GooglePlusData = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA];
 
                 var heroes = [];
 
@@ -1037,7 +1073,7 @@ handlers.getPvpPlayers = function(args) {
                 var NameDataInfo = PvpPlayer.getNamePresence();
                 var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname/*player["DisplayName"]*/
                     , rank: playerRank , rate: player["StatValue"]
-                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId };
+                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId, gplus: GooglePlusData };
                 players.push(pl);
             }
 		}
@@ -1061,11 +1097,12 @@ handlers.getPvpPlayerInfo = function(args) {
         {
 
             var PvpPlayer = new cUser( InputPlayers[i], "", "" );
-            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]);
+            PvpPlayer.readDbFields([CONST_KEY_SERVER_FIELD_GAME_PROGRESS, CONST_KEY_SERVER_FIELD_GAME_CENTER_ID, CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA]);
             if ( PvpPlayer.isInitedSuccessfully() )
             {
                 var progress = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
                 var GameCenterId = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID];
+                var GooglePlusData = PvpPlayer.mDbFields[CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA];
 
                 var heroes = [];
 
@@ -1087,7 +1124,7 @@ handlers.getPvpPlayerInfo = function(args) {
 
                 var NameDataInfo = PvpPlayer.getNamePresence();
                 var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname
-                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId };
+                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId, gplus: GooglePlusData };
                 players.push(pl);
             }
         }

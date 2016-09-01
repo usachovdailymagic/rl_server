@@ -677,7 +677,7 @@ handlers.linkGooglePlusManually = function(args) {
     if ( isObject(args) && "GPId" in args && "Fullname" in args && "PhotoUrl" in args )
     {
         var User = new cUser( currentPlayerId, "" , "" );
-        User.setGooglePlusData( args["GCId"], args["Fullname"], args["PhotoUrl"], true ); // Setting new Id and save it immediately
+        User.setGooglePlusData( args["GPId"], args["Fullname"], args["PhotoUrl"], true ); // Setting new Id and save it immediately
         result = {isSuccess:true};
     }
     else

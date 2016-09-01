@@ -1033,7 +1033,7 @@ handlers.getPvpPlayers = function(args) {
 //-- START TODO remove this hardcode after testing. This part of code adds players with facebook linked accounts
             if ( i == 0 )
             {
-                var PossiblePlayers = ["714C003E1ABF156","8CCDCAAB7DEC6F8","3EDB58C3E81D6362"];
+                var PossiblePlayers = ["26A034D4D5C9F0F0","714C003E1ABF156","8CCDCAAB7DEC6F8","3EDB58C3E81D6362"];
                 var SelectedId = PossiblePlayers[0];
                 if ( currentPlayerId == PossiblePlayers[0] )
                 {

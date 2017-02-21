@@ -77,6 +77,7 @@ function getServerConstantsObject() {
     Constants["askInterval"] = CONST_ASK_FRIEND_GIFT_TIME_INTERVAL;
     Constants["countFriendsToAsk"] = CONST_MAX_FRIENDS_COUNT_ASK_GIFT;
     Constants["countPvpGetInfo"] = CONST_MAX_PLAYERS_COUNT_GET_PVP_INFO;
+    Constants["countFriendsProgressPerRequest"] = CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY;
     Constants["askVals"] = {"Energy":CONST_ASK_FRIEND_AMOUNT_ENERGY
                             , "Gold":CONST_ASK_FRIEND_AMOUNT_GOLD
                             , "Wood":CONST_ASK_FRIEND_AMOUNT_WOOD

@@ -1,5 +1,5 @@
 //----------------Value constants---------------------
-var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 2; //Max friend's scores to receive per one request
+var CONST_MAX_FRIENDS_COUNT_SCORES_TO_QUERY 			= 4; //Max friend's scores to receive per one request
 var CONST_MAX_FRIENDS_COUNT_ASK_GIFT     			    = 2; //Max friends count to ask for gift
 var CONST_MAX_PLAYERS_COUNT_GET_PVP_INFO  			    = 4; //Max pvp players get detailed info per one request
 //var CONST_SEND_FRIEND_GIFT_TIME_INTERVAL     			= 86400; //Time between gift sending to the same friend

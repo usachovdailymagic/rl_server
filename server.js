@@ -11,6 +11,42 @@ var CONST_ASK_FRIEND_AMOUNT_ENERGY                      = 2; //Amount of resourc
 var CONST_ASK_FRIEND_AMOUNT_GOLD                        = 2; //Amount of resource asking for from friend
 var CONST_ASK_FRIEND_AMOUNT_WOOD                        = 2; //Amount of resource asking for from friend
 var CONST_ASK_FRIEND_AMOUNT_STONE                       = 2; //Amount of resource asking for from friend
+
+/* About redeem types
+    	"interval" type has startTimer And endTimer. This code will be active only in this time interval
+    	"simple" will be active always when this code is in list of possible codes
+    	redeemCode has "simple" type as default
+        Possible resources types: "gold", "gems", "wood", "stone", "energy", "scrolls" 
+		Possible item types: you have to know tag and level combination 
+    */
+var CONST_REDEEM_CODES = {
+// interval code works since 1.02.2017 till 1.07.2017
+	"q37":{"type":"interval", 
+           "start":1485907200,
+				"end":1498867200,
+				"reward":{
+					"resources":{"gold":100,"wood":5},
+					"items":[{"tag":10,"level":1}],
+						 }
+			},
+// redeem code with simple type. Active always while it is here for each player once				
+	"s34":{"type":"simple", 
+				"reward":{
+					"resources":{"gold":50},
+					"items":[{"tag":15,"level":2}],
+						 }
+		  },
+// redeem code with simple type. Active always while it is here for each player once
+// All possible cheats in here
+	"super-cheat-123":{"type":"simple", 
+				"reward":{
+					"resources":{"gold":50,"gems":2,"wood":1,"stone":1, "energy":1, "scrolls":1},
+					"items":[{"tag":5,"level":2},
+                             {"tag":10,"level":1}
+                            ],
+						 }
+		  }
+};
 //----------------End Value constants---------------------
 
 //----------------Server keys constants---------------------
@@ -23,6 +59,7 @@ var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
 var CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP			= "GiftsAskTime";
 var CONST_KEY_SERVER_FIELD_GAME_CENTER_ID   			= "GameCenterId";
 var CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA   			= "GooglePlusData";
+var CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA   			= "RedeemCodesUsed";
 //----------------End Server keys constants---------------------
 
 //----------------Errors---------------------
@@ -44,6 +81,14 @@ var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP_ASKING            	 	    = 3008;
 var CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND            	 	= 3009;
 var CONST_ERROR_CODE_GC_LINK_BAD_PARAMS                     	 	= 3010;
 var CONST_ERROR_CODE_GOOGLE_LINK_BAD_PARAMS                         = 3011;
+
+// 4XXX Errors for RedeemCode operations
+var CONST_ERROR_CODE_BAD_REDEEM_CODE_ID			 		            = 4001;
+var CONST_ERROR_CODE_BAD_REDEEM_CODE_SETTINGS	 		            = 4002;
+var CONST_ERROR_CODE_LATE_TO_USE_THIS_CODE_INTERVAL		            = 4003;
+var CONST_ERROR_CODE_PLAYER_ALREADY_USED_THIS_CODE			        = 4004;
+var CONST_ERROR_CODE_REDEEM_REQUEST_BAD_PARAMS				        = 4005;
+var CONST_ERROR_CODE_CANNOT_INIT_USER_AT_REDEEM				        = 4006;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {
@@ -88,6 +133,127 @@ function getServerConstantsObject() {
 //------------------------------------------------------------------
 function getError(code, msg) {
     return {code:code, msg: msg};
+}
+//-----------------------------------------------------------------
+// Represents class of RedeemCode Element.
+function cRedeemCodeElement(codeId)
+{
+    this.mCodeId = codeId;
+    this.mDurationType = "simple"; // possible types "interval", "simple"
+    this.mStartTimestamp = 0; // for "interval" type
+    this.mEndTimestamp = 0; // for "interval" type
+    /* About duration types
+    	"interval" type has startTimer And endTimer. This code will be active only in this time interval
+    	"simple" will be active always when this code is in list of possible codes
+    	redeemCode has "simple" type as default
+    */
+    
+    this.mReward = {};
+    this.mIsInitedSuccessful = false;
+    this.mErrorCode = 0;
+  
+	var _this = this; // private instance for private methods
+
+//public
+//------------------------
+    this.IsSimple = function()
+    {
+        return this.mDurationType == "simple";
+    }
+//------------------------    
+    this.IsInterval = function()
+    {
+        return this.mDurationType == "interval";
+    }
+//------------------------    
+    this.IsInitedSuccessful = function()
+    {
+        return this.mIsInitedSuccessful;
+    }
+//------------------------    
+    this.IsAvailable = function()
+    {
+        if ( !this.IsInitedSuccessful() ) // bad settings params or input data
+        {
+        	return false;
+        }
+        
+        if ( this.IsSimple() )
+        {
+        	return true;
+        }
+        
+        if ( this.IsInterval() )
+        {
+        	var CurTime = getServerTimestamp();
+        	if ( this.mStartTimestamp <= CurTime && this.mEndTimestamp >= CurTime )
+        	{
+        		return true;
+        	}
+        	else
+        	{
+        		_this.mErrorCode = CONST_ERROR_CODE_LATE_TO_USE_THIS_CODE_INTERVAL;
+        	}
+        }
+        return false;
+    }
+//------------------------    
+    this.GetReward = function()
+    {
+        return this.mReward;
+    }        
+//private
+//------------------------
+    function Constructor()
+    {
+	    _this.mIsInitedSuccessful = true;
+    	if ( isObject(CONST_REDEEM_CODES) && _this.mCodeId in CONST_REDEEM_CODES && isObject(CONST_REDEEM_CODES[_this.mCodeId]) )	
+		{
+			var TempObj = CONST_REDEEM_CODES[_this.mCodeId];
+			var TypeKey = "type";
+			var StartKey = "start";
+			var EndKey = "end";
+			var RewardKey = "reward";
+			
+			if ( TypeKey in TempObj )
+			{
+				_this.mDurationType = TempObj[TypeKey];
+			}
+			
+			if ( _this.IsInterval() )
+			{
+				if ( StartKey in TempObj && EndKey in TempObj )
+				{
+					_this.mStartTimestamp = TempObj[StartKey];
+					_this.mEndTimestamp = TempObj[EndKey];
+				}
+				else
+				{
+					_this.mErrorCode = CONST_ERROR_CODE_BAD_REDEEM_CODE_SETTINGS;
+					_this.mIsInitedSuccessful = false;
+					return;
+				}
+			}
+			
+			if ( RewardKey in TempObj )
+			{
+				_this.mReward = TempObj[RewardKey];
+			}
+			else
+			{
+				_this.mErrorCode = CONST_ERROR_CODE_BAD_REDEEM_CODE_SETTINGS;
+				_this.mIsInitedSuccessful = false;
+				return;
+			}
+		}
+		else
+		{
+			_this.mErrorCode = CONST_ERROR_CODE_BAD_REDEEM_CODE_ID;
+			_this.mIsInitedSuccessful = false;
+		}
+    }
+  
+	Constructor();
 }
 //-----------------------------------------------------------------
 // Represents Gift class.
@@ -146,6 +312,8 @@ function cUser(playFabId, facebookId, uuid)
     this.mDbFields[CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP]			= {};
     this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_CENTER_ID]				= "";
     this.mDbFields[CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA]				= {};
+    this.mDbFields[CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA]				= [];
+    
 //---private members---
     var mDbFieldsInitedSuccessfully = false;
     var mUserAccountInfoInitedSuccessfully = false;
@@ -364,6 +532,34 @@ returns bool value     */
         }
         return false;
     }
+//--------------------------------------------
+    this.useRedeeemCode = function(codeRedeem, saveImmediately)
+    {
+        if ( !isArray(this.mDbFields[CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA]) )
+        {
+            this.mDbFields[CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA] = [];
+        }
+        this.mDbFields[CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA].push(codeRedeem.mCodeId);
+        
+        if ( saveImmediately )
+        {
+            this.saveDbFields([CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA]);
+        }
+    }    
+//--------------------------------------------
+/* Returns true if this code was already redeemed by this user */
+    this.usedAlreadyRedeemCode = function(codeRedeem)
+    {
+        if ( isArray(this.mDbFields[CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA]) )
+        {
+            if ( this.mDbFields[CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA].indexOf(codeRedeem.mCodeId) > -1 )
+            {
+            	return true;
+            }            
+        }
+        
+		return false;
+    }    
 //--------------------------------------------
     this.setGameCenterId = function(gc_id, saveImmediately)
     {
@@ -905,8 +1101,48 @@ handlers.loadMyProgress = function(args)
 };
  
 //Redeem Promo Code
-//input: code
-handlers.redeemPromoCode = function(args) {
+//input: codeId
+handlers.redeemPromoCode = function(args) 
+{
+	var response = {};
+	if ( isObject(args) && ("codeId" in args) )
+    {
+        var codeId = args["codeId"];
+	    var CodeElement = new cRedeemCodeElement(codeId);
+	    
+	    if ( !CodeElement.IsInitedSuccessful() || !CodeElement.IsAvailable() )
+	    {
+	    	response = getError(CodeElement.mErrorCode, "Error");
+	    }
+	    else
+	    {
+	    	// Init user to check his redeem codes
+	    	var User = new cUser(currentPlayerId,"","");
+			User.readDbFields([CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA]);
+			if ( User.isInitedSuccessfully() )
+			{
+				if ( User.usedAlreadyRedeemCode(CodeElement) ) // Already redeemed by this user
+				{
+					response = getError(CONST_ERROR_CODE_PLAYER_ALREADY_USED_THIS_CODE, "Already used");
+				}
+				else // Everything is great
+				{
+					User.useRedeeemCode(CodeElement, true); // Use this code and save it immediately 
+					response["reward"]=CodeElement.GetReward();
+				}
+			}
+			else
+			{				
+				response = getError(CONST_ERROR_CODE_CANNOT_INIT_USER_AT_REDEEM, "User problem");
+			}
+		}
+    }
+    else
+    {    	
+    	response = getError(CONST_ERROR_CODE_REDEEM_REQUEST_BAD_PARAMS, "Bad params");
+    }
+    
+    return response;
     /*Parse.Cloud.useMasterKey();
      
     var currentCode = Parse.Object.extend("Codes");

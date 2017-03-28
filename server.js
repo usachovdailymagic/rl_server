@@ -45,7 +45,23 @@ var CONST_REDEEM_CODES = {
                              {"tag":10,"level":1}
                             ],
 						 }
-		  }
+		  },
+// Active promo-codes
+	"F2y4-h9Sq":{"type":"simple", 
+				"reward":{
+					"resources":{"gold":2000},
+						 }
+		  },
+	"92UK-58Xp":{"type":"simple", 
+				"reward":{
+					"resources":{"scrolls":5},
+						 }
+		  },
+	"UR72-gD3X":{"type":"simple", 
+				"reward":{
+					"resources":{"gems":10},
+						 }
+		  },
 };
 //----------------End Value constants---------------------
 

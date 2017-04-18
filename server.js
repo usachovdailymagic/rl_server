@@ -67,6 +67,7 @@ var CONST_REDEEM_CODES = {
 
 //----------------Server keys constants---------------------
 var CONST_KEY_SERVER_FIELD_GAME_PROGRESS				= "Progress";
+var CONST_KEY_SERVER_FIELD_VAULT_PROGRESS				= "VaultProgress";
 var CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW				= "SaveOverview";
 var CONST_KEY_SERVER_FIELD_UUID        					= "Uuid";
 var CONST_KEY_SERVER_FIELD_SCORE        				= "Score";
@@ -399,6 +400,35 @@ function cUser(playFabId, facebookId, uuid)
             });
         }
     }
+//--------------------------------------------
+/*****
+Updates main progress field by merging it with vault external field. Calls at loadProgress handler command
+*****/
+    this.updateProgressWithExternalVaultField = function()
+    {
+      	if ( this.isInitedSuccessfully() )
+        {
+          	if ( CONST_KEY_SERVER_FIELD_VAULT_PROGRESS in this.mDbFields && isObject(this.mDbFields[CONST_KEY_SERVER_FIELD_VAULT_PROGRESS]) )
+            {
+              	if ( CONST_KEY_SERVER_FIELD_GAME_PROGRESS in this.mDbFields && isArray(this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS]) )
+                {
+                  	var VaultKey = "vault";
+                  	var Len = this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS].length;
+                  	// Search for "vault" object to modify it
+                  	for ( var i = 0; i < Len; i++ )
+                    {
+                        var Obj = this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS][i];
+                      	if ( isObject(Obj) && VaultKey in Obj )
+                        {
+                        	Obj[VaultKey] = this.mDbFields[CONST_KEY_SERVER_FIELD_VAULT_PROGRESS];
+                          	this.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS][i] = Obj;
+                          	break;
+                        }
+                    }
+                }
+            }
+        }
+    }    
 //--------------------------------------------
     this.getGiftsCount = function()
     {
@@ -997,6 +1027,7 @@ handlers.saveMyProgress = function(args) {
     var uuid_to_save = "";
     var SaveOverview = null;
     var ScoreData = null;
+    var VaultData = null;
     
     for (var i = 0; i < gameData.length; i++) {
         var obj = gameData[i];
@@ -1011,6 +1042,10 @@ handlers.saveMyProgress = function(args) {
             {
             	SaveOverview = JSON.stringify(obj["saveoverview"]);
             }
+	        else if ( property == "vault" )
+            {
+            	VaultData = JSON.stringify(obj["vault"]);              
+            }
             else if ( property == "info" && isObject(obj[property]) && ( "uuid" in obj[property] ) ) // searching uuid to save
             {
             	uuid_to_save = obj[property]["uuid"];
@@ -1022,7 +1057,13 @@ handlers.saveMyProgress = function(args) {
                 {
                     var lfound = false;
                      
-                    if (property==propertySaveGame)
+                    if ( property == "vault" && property==propertySaveGame ) // reset vault data
+                    {
+                        SaveGame[j] = {vault:{}};
+                        lfound = true;
+                        break;
+                    }
+                    else if (property==propertySaveGame)
                     {
                         SaveGame[j] = gameData[i];
                         lfound = true;
@@ -1050,11 +1091,21 @@ handlers.saveMyProgress = function(args) {
     {
     	SaveObject[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW] = SaveOverview;
     }
+    if ( VaultData != null )
+    {
+    	SaveObject[CONST_KEY_SERVER_FIELD_VAULT_PROGRESS] = VaultData;
+    }
 
-    server.UpdateUserData({
-		PlayFabId: currentPlayerId,
-		Data: SaveObject
-	});
+    // Separate updating into multiple request to fix 30kb limit as argument
+    for ( var KeyToSave in SaveObject )
+    {
+      	var ObjectPart = {};
+        ObjectPart[KeyToSave] = SaveObject[KeyToSave];
+        var res = server.UpdateUserData({
+            PlayFabId: currentPlayerId,
+        	Data: ObjectPart
+        });
+    }
 };
  
 //input: none
@@ -1086,10 +1137,15 @@ handlers.loadMyProgress = function(args)
         , CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP
         , CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP
         , CONST_KEY_SERVER_FIELD_GAME_CENTER_ID
-        , CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA
+        , CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA,
+        , CONST_KEY_SERVER_FIELD_VAULT_PROGRESS
+        , "test_field"
         ]);
-    if ( User.isInitedSuccessfully() )
+
+  	if ( User.isInitedSuccessfully() )
     {
+      	User.updateProgressWithExternalVaultField();//Modify vault field with main progress field
+        
         response = { result:{} };
         response.result["progress"] = User.mDbFields[CONST_KEY_SERVER_FIELD_GAME_PROGRESS];
         response.result["overview"] = User.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];

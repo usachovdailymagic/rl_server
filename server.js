@@ -62,16 +62,32 @@ var CONST_REDEEM_CODES = {
 					"resources":{"gems":10},
 						 }
 		  },
+// Promo codes for contest
+	"VTvc-PT7c":{"type":"simple", 
+				"reward":{
+					"resources":{"gems":100,"scrolls":10,"gold":10000},
+						 }
+		    },
+	"3yRf-a7sd":{"type":"simple", 
+				"reward":{
+					"resources":{"gems":25,"scrolls":5,"gold":5000},
+						 }
+		    },
+	"F84b-dsCy":{"type":"simple", 
+				"reward":{
+					"resources":{"gems":10,"scrolls":3,"gold":2000},
+						 }
+		    },
 };
 //----------------End Value constants---------------------
 
 //----------------Server keys constants---------------------
-var CONST_KEY_SERVER_FIELD_GAME_PROGRESS				= "Progress";
-var CONST_KEY_SERVER_FIELD_VAULT_PROGRESS				= "VaultProgress";
-var CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW				= "SaveOverview";
-var CONST_KEY_SERVER_FIELD_UUID        					= "Uuid";
-var CONST_KEY_SERVER_FIELD_SCORE        				= "Score";
-var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED				= "GiftsReceived";
+var CONST_KEY_SERVER_FIELD_GAME_PROGRESS			= "Progress";
+var CONST_KEY_SERVER_FIELD_VAULT_PROGRESS			= "VaultProgress";
+var CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW			= "SaveOverview";
+var CONST_KEY_SERVER_FIELD_UUID        				= "Uuid";
+var CONST_KEY_SERVER_FIELD_SCORE        			= "Score";
+var CONST_KEY_SERVER_FIELD_GIFTS_RECEIVED			= "GiftsReceived";
 var CONST_KEY_SERVER_FIELD_GIFTS_SENT_TIMESTAMP			= "GiftsSentTime";
 var CONST_KEY_SERVER_FIELD_GIFTS_ASK_TIMESTAMP			= "GiftsAskTime";
 var CONST_KEY_SERVER_FIELD_GAME_CENTER_ID   			= "GameCenterId";
@@ -81,31 +97,31 @@ var CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA   			= "RedeemCodesUsed";
 
 //----------------Errors---------------------
 // 1XXX Errors for Load Save Reset operations
-var CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA	            = 1001;
+var CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA	            	= 1001;
 
 // 2XXX Errors for System additional operations
-var CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 		            = 2001;
+var CONST_ERROR_CODE_GET_CUSTOM_ID_NOT_FOUND_UUID 		        = 2001;
 
 // 3XXX Errors for FB interaction operations
-var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		            = 3001;
+var CONST_ERROR_CODE_FRIEND_PROGRESS_NOT_FOUND	 		        = 3001;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_GIFTS_SENDING_NOT_FOUND	 	= 3002;
 var CONST_ERROR_CODE_BAD_PARAMS_AT_GIFTS_SENDING            	 	= 3003;
 var CONST_ERROR_CODE_TOO_EARLY_TO_SEND_THIS_FRIEND            	 	= 3004;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_NOT_FOUND	 	        = 3005;
-var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP            	 	            = 3006;
+var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP            	 	        = 3006;
 var CONST_ERROR_CODE_FRIEND_PROGRESS_AT_HELP_ASKING_NOT_FOUND	 	= 3007;
-var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP_ASKING            	 	    = 3008;
+var CONST_ERROR_CODE_BAD_PARAMS_AT_HELP_ASKING            	 	= 3008;
 var CONST_ERROR_CODE_TOO_EARLY_TO_ASK_THIS_FRIEND            	 	= 3009;
 var CONST_ERROR_CODE_GC_LINK_BAD_PARAMS                     	 	= 3010;
-var CONST_ERROR_CODE_GOOGLE_LINK_BAD_PARAMS                         = 3011;
+var CONST_ERROR_CODE_GOOGLE_LINK_BAD_PARAMS                         	= 3011;
 
 // 4XXX Errors for RedeemCode operations
-var CONST_ERROR_CODE_BAD_REDEEM_CODE_ID			 		            = 4001;
-var CONST_ERROR_CODE_BAD_REDEEM_CODE_SETTINGS	 		            = 4002;
-var CONST_ERROR_CODE_LATE_TO_USE_THIS_CODE_INTERVAL		            = 4003;
-var CONST_ERROR_CODE_PLAYER_ALREADY_USED_THIS_CODE			        = 4004;
-var CONST_ERROR_CODE_REDEEM_REQUEST_BAD_PARAMS				        = 4005;
-var CONST_ERROR_CODE_CANNOT_INIT_USER_AT_REDEEM				        = 4006;
+var CONST_ERROR_CODE_BAD_REDEEM_CODE_ID			 		= 4001;
+var CONST_ERROR_CODE_BAD_REDEEM_CODE_SETTINGS	 		        = 4002;
+var CONST_ERROR_CODE_LATE_TO_USE_THIS_CODE_INTERVAL		        = 4003;
+var CONST_ERROR_CODE_PLAYER_ALREADY_USED_THIS_CODE			= 4004;
+var CONST_ERROR_CODE_REDEEM_REQUEST_BAD_PARAMS				= 4005;
+var CONST_ERROR_CODE_CANNOT_INIT_USER_AT_REDEEM				= 4006;
 //----------------End Errors---------------------
 // -----------------------------------------------------------------
 function isObject(val) {

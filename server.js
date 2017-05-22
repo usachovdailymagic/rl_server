@@ -1008,38 +1008,6 @@ handlers.saveMyProgress = function(args) {
     	}
     }
     
-    var myJSONArray = [ {info:{}}, {map:{}}, {vault:{}}, {creatures:{}}, {shop:{}}, {quests_tasks:{}}, {scores:{}}, {gameflagsparams:{}}, {battleinfo:{}}, {task_timers:{}}, {tutorial:{}}, {chest_shop:{}}, {gifts:[]}];
-    var missedArray = [];
-     
-    if (myJSONArray.length!=SaveGame.length) {
-        for(var i = 0; i < myJSONArray.length; i++) { 
-            var obj = myJSONArray[i];
-            for (var property in obj) {
-                var found = false;
-                 
-                for (var j = 0; j<SaveGame.length; j++) {
-                    var obj3 = SaveGame[j];
-                     
-                    for (var propertyinSaveGame in obj3) {
-                        if (property==propertyinSaveGame) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found)
-                        break;
-                }
-                if (!found) {
-                    missedArray.push(myJSONArray[i]);
-                }
-            }
-        }
-         
-        for(var i = 0; i < missedArray.length; i++) {
-            SaveGame.push(missedArray[i]);
-        }
-    }
-    
     var uuid_to_save = "";
     var SaveOverview = null;
     var ScoreData = null;
@@ -1051,28 +1019,29 @@ handlers.saveMyProgress = function(args) {
         {
             if ( property == "scores" )
             {
-            	var scoreData = obj["scores"].levelsScores;
-            	ScoreData = JSON.stringify(scoreData);
+                var scoreData = obj["scores"].levelsScores;
+                ScoreData = JSON.stringify(scoreData);
             }
             else if ( property == "saveoverview" )
             {
-            	SaveOverview = JSON.stringify(obj["saveoverview"]);
+                SaveOverview = JSON.stringify(obj["saveoverview"]);
             }
-	        else if ( property == "vault" )
+            else if ( property == "vault" )
             {
-            	VaultData = JSON.stringify(obj["vault"]);              
+                VaultData = JSON.stringify(obj["vault"]);              
             }
             else if ( property == "info" && isObject(obj[property]) && ( "uuid" in obj[property] ) ) // searching uuid to save
             {
-            	uuid_to_save = obj[property]["uuid"];
+                uuid_to_save = obj[property]["uuid"];
             }
+
+            var lfound = false;
             for (var j = 0; j < SaveGame.length; j++)
             {
                 var obj2 = SaveGame[j];
+                
                 for (var propertySaveGame in obj2)
                 {
-                    var lfound = false;
-                     
                     if ( property == "vault" && property==propertySaveGame ) // reset vault data
                     {
                         SaveGame[j] = {vault:{}};
@@ -1088,6 +1057,10 @@ handlers.saveMyProgress = function(args) {
                     if (lfound)
                         break;
                 }
+            }
+
+            if (!lfound) {
+                SaveGame.push(gameData[i]);
             }
         }
     }

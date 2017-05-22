@@ -1012,6 +1012,33 @@ handlers.saveMyProgress = function(args) {
     var SaveOverview = null;
     var ScoreData = null;
     var VaultData = null;
+	
+    var isNewVersion = false;
+
+    for (var i = 0; i < gameData.length; i++) {
+        var obj = gameData[i];
+        if ("info" in obj && "version" in obj["info"] && obj["info"]["version"] == "0.99") {
+            isNewVersion = true;
+        }
+    }
+
+    if (isNewVersion) {
+        for (var i = 0; i < SaveGame.length; i++) {
+            var obj = SaveGame[i];
+                    
+            for (var property in obj) {
+                if (property == "map") {
+                    SaveGame[i] = {map:{}};
+                }
+                else if (property == "scores") {
+                    SaveGame[i] = {scores:{}};
+                }
+                else if (property == "battleinfo") {
+                    SaveGame[i] = {battleinfo:{}};
+                }
+            }
+        }
+    }
     
     for (var i = 0; i < gameData.length; i++) {
         var obj = gameData[i];

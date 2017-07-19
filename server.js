@@ -15,6 +15,7 @@ var CONST_ASK_FRIEND_AMOUNT_STONE                       = 2; //Amount of resourc
 var CONST_SYSTEM_PASSW_CRON_TASKS_KEY					= "allow_cron_pass"; //This is key to password fiels. SYSTEM CONST, dont change it !!!!!!
 var CONST_SYSTEM_PASSW_CRON_TASKS						= "9a6RCVLPwD0LLZGJfMFmn8pJYgXJcY"; //This is password to execute cron tasks. SYSTEM CONST, dont change it !!!!!!
 var CONST_SYSTEM_ADMIN_GIFT_SENDER_NAME					= "AdminGifter"; //This is sender_id value who sends gifts from server
+var CONST_SYSTEM_CRON_BLOCK_RESET_AND_START_NEW	= "block_reset_start"; //This is key to block reset leaderboard and start new tournamen from cronReward command. SYSTEM CONST, dont change it !!!!!!
 /* About redeem types
     	"interval" type has startTimer And endTimer. This code will be active only in this time interval
     	"simple" will be active always when this code is in list of possible codes
@@ -2321,6 +2322,8 @@ handlers.cronRewardTournament = function(args) {
 				&& (CONST_SYSTEM_PASSW_CRON_TASKS_KEY in args) && (args[CONST_SYSTEM_PASSW_CRON_TASKS_KEY] == CONST_SYSTEM_PASSW_CRON_TASKS)
 			 )
 		{
+				//Doesn't create new tournament from this cron task
+				var BlockResetAndStart = ((CONST_SYSTEM_CRON_BLOCK_RESET_AND_START_NEW in args) && (args[CONST_SYSTEM_CRON_BLOCK_RESET_AND_START_NEW] == true)) ? true : false;
 				// Read title internal data
 		   	var TitleInternalData = server.GetTitleInternalData({Keys:[CONST_KEY_INTERNAL_TITLE_DATA_KEY_CURRENT_TOURNAMENT]});
 				var CurrentTournamentData = {};
@@ -2381,22 +2384,29 @@ handlers.cronRewardTournament = function(args) {
 												}
 										}
 
-										var ResetData = handlers["resetActiveLeaderboard"](args);
-										if ( ResetData.is_success )
+										if ( !BlockResetAndStart )// Requred to reset old leaderboard and start new tournament from this cron task
 										{
-												var StartData = handlers["cronStartTournament"](args);
-												if ( StartData.is_success )
+												var ResetData = handlers["resetActiveLeaderboard"](args);
+												if ( ResetData.is_success )
 												{
-														return {is_success:true, reset: ResetData, start: StartData,RewardTable:RewardTable};
+														var StartData = handlers["cronStartTournament"](args);
+														if ( StartData.is_success )
+														{
+																return {is_success:true, reset: ResetData, start: StartData,RewardTable:RewardTable};
+														}
+														else
+														{
+																return { is_success:false, reason: StartData,RewardTable:RewardTable};
+														}
 												}
 												else
 												{
-														return { is_success:false, reason: StartData,RewardTable:RewardTable};
+														return { is_success:false, reason: ResetData,RewardTable:RewardTable};
 												}
 										}
-										else
+										else // There is no need to start new tournament from this cron task
 										{
-												return { is_success:false, reason: ResetData,RewardTable:RewardTable};
+												return {is_success:true, reset_and_start_was_blocked:true,RewardTable:RewardTable};
 										}
 								}
 								else

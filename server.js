@@ -175,7 +175,7 @@ function getServerTimestamp() {
 
     return time;
 }
-function getTimestampsForTournamentFromTodayByHM( hours, minutes, tournament_duration, reward_duration ) {
+function getTimestampsForTournamentFromTodayByHM( hours, minutes, offset_start, tournament_duration, reward_duration ) {
     var now = new Date();
     now.setHours(hours);
     now.setMinutes(minutes);
@@ -184,7 +184,7 @@ function getTimestampsForTournamentFromTodayByHM( hours, minutes, tournament_dur
 
     var time = now.getTime();
     time = Math.floor(time / 1000);
-    var StartTime = time;
+    var StartTime = time + offset_start; // Adds offset to calculate right start_timestamp
     var EndTime = StartTime + tournament_duration;
     var RewardTime = EndTime + reward_duration;
     return {StartTime:StartTime, EndTime:EndTime, RewardTime:RewardTime};
@@ -2222,12 +2222,13 @@ handlers.cronStartTournament = function(args) {
 						if ( isObject(PreviouslyRandomedData) && isArray(MapsData) && isObject(RewardsData) && isObject(ConstantsData)
 								)
 						{
-								if ( isObject(ConstantsData) && ("count_checkpoints" in ConstantsData) && ("start_tournament_hours" in ConstantsData) && ("start_tournament_minutes" in ConstantsData)
+								if ( isObject(ConstantsData) && ("count_checkpoints" in ConstantsData) && ("start_tournament_hours" in ConstantsData) && ("start_tournament_minutes" in ConstantsData) && ("start_tournament_offset" in ConstantsData)
 										&& ("checkpoint_timeout" in ConstantsData) && ("battle_timeout" in ConstantsData) && ("tournament_duration" in ConstantsData) && ("give_reward_duration" in ConstantsData)
 									)
 								{
 										StartTournamentHours = ConstantsData["start_tournament_hours"];
 										StartTournamentMinutes = ConstantsData["start_tournament_minutes"];
+										StartTournamentOffset = ConstantsData["start_tournament_offset"];//Offset from start time in seconds
 										TournamentDuration = ConstantsData["tournament_duration"];
 										GiveRewardDuration = ConstantsData["give_reward_duration"];
 										//Generate random values for next tournament
@@ -2254,7 +2255,7 @@ handlers.cronStartTournament = function(args) {
 										}
 										NewMap = getRandomFromArrayExceptOneValue(MapsData,PreviousMap);
 										NewRewardSlot = getRandomFromArrayExceptOneValue(RewardsKeys,PreviousRewardSlot);
-										var GeneratedTimestamps = getTimestampsForTournamentFromTodayByHM( StartTournamentHours, StartTournamentMinutes, TournamentDuration, GiveRewardDuration );
+										var GeneratedTimestamps = getTimestampsForTournamentFromTodayByHM( StartTournamentHours, StartTournamentMinutes, StartTournamentOffset, TournamentDuration, GiveRewardDuration );
 
 										//Update current tournament and new generated fields
 										PreviouslyRandomedData = {map:NewMap, reward:NewRewardSlot, tid:NewId};

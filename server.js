@@ -1429,6 +1429,28 @@ handlers.loadMyProgress = function(args)
 	return response;
 };
 
+handlers.loadSaveOverview = function(args)
+{
+    var leaveReceivedGifts = false;
+    var response = {};
+
+    var User = new cUser(currentPlayerId,"","");
+    User.readDbFields([CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW]);
+
+    if ( User.isInitedSuccessfully() )
+    {
+        User.updateProgressWithExternalVaultField();//Modify vault field with main progress field
+
+        response = { result:{} };
+        response.result["overview"] = User.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
+    }
+    else
+    {
+        response = getError(CONST_ERROR_CODE_LOADPROGRESS_NOT_FOUND_USERDATA, "Save or key not found");
+    }
+    return response;
+};
+
 //Redeem Promo Code
 //input: codeId
 handlers.redeemPromoCode = function(args)

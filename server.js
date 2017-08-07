@@ -1439,8 +1439,6 @@ handlers.loadSaveOverview = function(args)
 
     if ( User.isInitedSuccessfully() )
     {
-        User.updateProgressWithExternalVaultField();//Modify vault field with main progress field
-
         response = { result:{} };
         response.result["overview"] = User.mDbFields[CONST_KEY_SERVER_FIELD_SAVE_OVERVIEW];
     }

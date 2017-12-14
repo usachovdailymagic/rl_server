@@ -1557,7 +1557,7 @@ handlers.getPvpPlayers = function(args) {
     var leaderboard =  server.GetLeaderboardAroundUser({
         StatisticName: "PvP Raiting",
         PlayFabId: currentPlayerId,
-        MaxResultsCount: 4
+        MaxResultsCount: 10
     });
 
 	var players = [];
@@ -1601,23 +1601,25 @@ handlers.getPvpPlayers = function(args) {
                     for (var j = 0; j < progress.length; j++)
                     {
                         var obj = progress[j];
-                        if ( ("creatures" in obj) )
+												if ( ("creatures" in obj) )
                         {
-                            if ("heroes" in obj.creatures)
+													  if ("heroes" in obj.creatures && isArray(obj.creatures.heroes) && obj.creatures.heroes.length > 0)
                             {
-                                heroes = obj.creatures.heroes;
+																heroes = obj.creatures.heroes;
                             }
                             break;
                         }
                     }
                 }
-
-                var playerRank = player["Position"] + 1;
-                var NameDataInfo = PvpPlayer.getNamePresence();
-                var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname/*player["DisplayName"]*/
-                    , rank: playerRank , rate: player["StatValue"]
-                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId, gplus: GooglePlusData };
-                players.push(pl);
+								if ( isArray(heroes) && heroes.length > 0 ) //Take only rivals with heroes present
+								{
+		                var playerRank = player["Position"] + 1;
+		                var NameDataInfo = PvpPlayer.getNamePresence();
+		                var pl = {playfabid: PvpPlayer.mPlayFabId, name: PvpPlayer.mFullname/*player["DisplayName"]*/
+		                    , rank: playerRank , rate: player["StatValue"]
+		                    , heroes: heroes, name_info: NameDataInfo, gc_id: GameCenterId, gplus: GooglePlusData };
+		                players.push(pl);
+								}
             }
 		}
 	}

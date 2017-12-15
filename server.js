@@ -1557,7 +1557,7 @@ handlers.getPvpPlayers = function(args) {
     var leaderboard =  server.GetLeaderboardAroundUser({
         StatisticName: "PvP Raiting",
         PlayFabId: currentPlayerId,
-        MaxResultsCount: 10
+        MaxResultsCount: 7
     });
 
 	var players = [];

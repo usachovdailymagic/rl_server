@@ -98,6 +98,7 @@ var CONST_KEY_SERVER_FIELD_GAME_CENTER_ID   		= "GameCenterId";
 var CONST_KEY_SERVER_FIELD_GOOGLE_PLUS_DATA   		= "GooglePlusData";
 var CONST_KEY_SERVER_FIELD_REDEEM_CODE_DATA   		= "RedeemCodesUsed";
 var CONST_KEY_SERVER_FIELD_TOURNAMENT_DATA   		= "Tournament";
+const CONST_KEY_SERVER_FIELD_RAW_SAVE_KEY   			= "RAW_SAVE_FIELD_";
 //----------------Title Data keys constants---------------------
 var CONST_KEY_TITLE_DATA_KEY_CURRENT_CLIENT_VERSION				= "SupportedClientVersion";
 var CONST_KEY_INTERNAL_TITLE_DATA_KEY_CURRENT_TOURNAMENT		= "CurrentTournamentSettings";
@@ -1228,7 +1229,56 @@ handlers.resetProgress = function(args) {
 		Data: ResetData
 	});
 };
+//It is new version of save to fix 30kb limit
+//input: countRawFields - int value of early written fields by ClienAPI
+handlers.saveRawProgress = function(args)
+{
+    //CONST_KEY_SERVER_FIELD_RAW_SAVE_KEY
+    if ( "countRawFields" in args && args["countRawFields"] > 0 )
+    {
+        var CountRawFields = args["countRawFields"];
+        var keys = [];
+        var i = 0;
+        for( i = 1; i <= CountRawFields; i++  )
+        {
+            keys.push( CONST_KEY_SERVER_FIELD_RAW_SAVE_KEY + i );
+        }
 
+        var RawData = server.GetUserData({
+            PlayFabId: currentPlayerId,
+            Keys: keys
+        });
+        if ( isObject(RawData) && "Data" in RawData )
+        {
+            var ResString = "";
+            for( i = 1; i <= CountRawFields; i++  )
+            {
+                var TmpKey = CONST_KEY_SERVER_FIELD_RAW_SAVE_KEY + i;
+                if( TmpKey in RawData.Data )
+                {
+                    ResString += RawData.Data[TmpKey].Value;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            var ResJson = JSON.parse(ResString);
+            response = handlers["saveMyProgress"](ResJson);
+        }
+        else
+        {
+            response = getError(CONST_ERROR_CODE_SAVERAWPROGRESS_BAD_SERVERDATA, "Bad server data");
+        }
+    }
+    else
+    {
+        response = getError(CONST_ERROR_CODE_SAVERAWPROGRESS_BAD_PARAMS, "Bad params");
+    }
+
+    return response;
+}
 //save my progress, new version
 //input: key for saved game and save data
 handlers.saveMyProgress = function(args) {

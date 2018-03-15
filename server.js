@@ -82,6 +82,12 @@ var CONST_REDEEM_CODES = {
 					"resources":{"gems":10,"scrolls":3,"gold":2000},
 						 }
 		    },
+// Promo-code for starterpack
+  	"DtPl-2FdM":{"type":"simple",
+    			"reward":{
+			        "resources":{"gems":75,"scrolls":3,"gold":10000},
+    		 			}
+              },		    
 };
 //----------------End Value constants---------------------
 
